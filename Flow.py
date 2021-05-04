@@ -43,10 +43,21 @@ class FlowShop:
         print(best_cmax, best_sequence[:, 0])
         return best_cmax
 
-    def swapPositions(self, list):
-        x1, x2 = randint(0, len(self.data) - 1), randint(0, len(self.data) - 1)
-        list[[x1, x2]] = list[[x2, x1]]
-        return list
+    def swapPositions(self, data):
+        x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
+        data[[x1, x2]] = data[[x2, x1]]
+        return data
+
+    def swapNeighbour(self, data):
+        x1 = randint(0, len(data) - 1)
+        x2 = x1 + (-1 ** randint(0, 1)) if (len(data) - 1) > x1 > 0 else x1 - 1 if x1 > 0 else x1 + 1
+        data[[x1, x2]] = data[[x2, x1]]
+        return data
+
+    def swapInsert(self, data):
+        x1, x2 = 3, 6
+        data.insert(x1, data.pop(x2))
+        return data
 
     def simulatedAnnealing(self, T, depth):
         best_sequence = old_sequence = self.data
@@ -143,7 +154,8 @@ if __name__ == '__main__':
     # perm = combinations([*range(10)], 2)
     # for i in list(perm):
     #     print(i)
-    f.drawChart(f.makeChart())
-    a = range(10)
-    a = [val for val in a for _ in range(4)]
-    print(a)
+    # f.drawChart(f.makeChart())
+    # a = range(10)
+    # a = [val for val in a for _ in range(4)]
+    # print(a)
+    print(f.swapInsert(data))
