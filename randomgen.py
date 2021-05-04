@@ -1,5 +1,6 @@
 import math
 import random
+import numpy as np
 
 
 class RandomNumberGenerator:
@@ -150,11 +151,19 @@ def bag(n, seed):
 def flow(n, m, seed):
     generator = RandomNumberGenerator(seed)
     # p = [{f"n-{str(j)} m-{str(i)}": generator.nextInt(1, 99) for i in range(m)} for j in range(n)]
+    # p = {str(j): [generator.nextInt(1, 99) for i in range(m)] for j in range(n)}
+    p = [[j, [generator.nextInt(1, 99) for i in range(m)]] for j in range(n)]
+    # p = [[generator.nextInt(1, 99) for i in range(m)] for j in range(n)]
+    return np.array(p,dtype='object')
+def floww(n, m, seed):
+    generator = RandomNumberGenerator(seed)
+    # p = [{f"n-{str(j)} m-{str(i)}": generator.nextInt(1, 99) for i in range(m)} for j in range(n)]
+    # p = {str(j): [generator.nextInt(1, 99) for i in range(m)] for j in range(n)}
+    # p = [[j, [generator.nextInt(1, 99) for i in range(m)]] for j in range(n)]
     p = [[generator.nextInt(1, 99) for i in range(m)] for j in range(n)]
-    return p
+    return np.array(p,dtype='object')
 
-
-print(flow(10, 5, 182128))
+# print(flow(10, 5, 182128))
 # print(assignment(4, seed=123123))
 # machines(5, 4, 123123)
 # ilog_path = r'C:\Users\WorkPlace\opl\projekcik\dane.dat'

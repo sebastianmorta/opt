@@ -1,102 +1,149 @@
-import numpy
+from itertools import permutations, combinations
 
-from randomgen import flow
+import numpy
+from matplotlib import pyplot as plt
+from numpy.lib import math
+from numpy.random import permutation
+
+from randomgen import flow, floww
 import random
 import numpy as np
+from random import randint, uniform
+from numpy import e
+import matplotlib
 
 
-def optimize(function, dimensions, lower_boundary, upper_boundary, max_iter, maximize=False):
-    best_solution = np.array([float()] * dimensions)
+class FlowShop:
+    def __init__(self, n, m, seed):
+        self.n = n
+        self.m = m
+        self.data = flow(n, m, seed)
+        self.Tmax = 1000
+        self.permutation = permutation([*range(self.n)])
 
-    for i in range(dimensions):
-        best_solution[i] = random.uniform(lower_boundary[i], upper_boundary[i])
+    def Cmax(self, data, n, m):
+        C = numpy.zeros((int(n + 1), int(m + 1)))
+        for j in range(1, n + 1):
+            for k in range(1, m + 1):
+                C[j][k] = max(C[j - 1][k], C[j][k - 1]) + data[j - 1][1][k - 1]
+        return C[n][m]
 
-    for _ in range(max_iter):
-
-        solution1 = function(best_solution)
-
-        new_solution = [lower_boundary[d] + random.random() * (upper_boundary[d] - lower_boundary[d]) for d in
-                        range(dimensions)]
-
-        if np.greater_equal(new_solution, lower_boundary).all() and np.less_equal(new_solution, upper_boundary).all():
-            solution2 = function(new_solution)
-        elif maximize:
-            solution2 = -100000.0
-        else:
-            solution2 = 100000.0
-
-        if solution2 > solution1 and maximize:
-            best_solution = new_solution
-        elif solution2 < solution1 and not maximize:
-            best_solution = new_solution
-
-    best_fitness = function(best_solution)
-
-    return best_fitness, best_solution
-
-
-n = 10
-m = 5
-data = flow(n, m, 123123)
-
-
-def Cmax(data, n, m):
-    C = numpy.zeros((int(n + 1), int(m + 1)))
-    for j in range(1, n + 1):
-        for k in range(1, m + 1):
-            if j > 1 and k > 1:
-                C[j][k] = max(C[j - 1][k], C[j][k - 1]) + data[j - 1][k - 1]
-            elif j == 1 and k > 1:
-                C[j][k] = C[j][k - 1] + data[j - 1][k - 1]
-            elif k == 1 and j > 1:
-                C[j][k] = C[j - 1][k] + data[j - 1][k - 1]
-            elif k == 1 and j == 1:
-                C[j][k] = data[j - 1][k - 1]
-    print(n, m, C)
-    return C
-
-
-def SumSortP(data, n, m):
-    permutation = []
-    result = []
-    for i in range(n):
-        permutation.append(i)
-    temp = sorted(permutation, key=lambda x: Psum(data, x, m), reverse=True)
-    for i in temp:
-        result.append(data[i])
-    return result
-
-
-def Psum(data, n, m):
-    sumP = 0
-    for i in range(m):
-        sumP += data[n][i]
-    return sumP
-
-
-def RS(data, n, m):
-    SortedList = SumSortP(data, n, m)
-    CurrentTask = SortedList[0]
-    sequence = [CurrentTask]
-    best_sequence = []
-    for i in range(1, n):  # dla każdego zadania
-        BestCmax = float("inf")  # bardzo duża liczba
-        for j in range(i + 1):  # dla każdej pozycji w permutacji
-            temp_sequence = sequence[:]
-            temp_sequence.insert(j, SortedList[i])
-            n = len(temp_sequence)
-            CurrentCmax = Cmax(temp_sequence, n, m)[n][m]
-            if CurrentCmax < BestCmax:
+    def randomSearch(self, iteration_depth):
+        #           754.0 [3 0 9 2 8 6 5 4 7 1]
+        best_cmax = 999999
+        temp_sequence = self.data
+        best_sequence = []
+        for _ in range(iteration_depth):
+            temp_cmax = self.Cmax(temp_sequence, self.n, self.m)
+            temp_sequence = self.swapPositions(temp_sequence)
+            if temp_cmax < best_cmax:
                 best_sequence = temp_sequence
-                BestCmax = CurrentCmax
-        sequence = best_sequence
-    return int(BestCmax)
+                best_cmax = temp_cmax
+            temp_sequence = best_sequence  # this line if we should reset seq when Cmax is worse
+        print(best_cmax, best_sequence[:, 0])
+        return best_cmax
+
+    def swapPositions(self, list):
+        x1, x2 = randint(0, len(self.data) - 1), randint(0, len(self.data) - 1)
+        list[[x1, x2]] = list[[x2, x1]]
+        return list
+
+    def simulatedAnnealing(self, T, depth):
+        best_sequence = old_sequence = self.data
+        best_cmax = old_cmax = 9999999
+        while T > 0.01:
+            for _ in range(depth):
+                new_sequence = self.swapPositions(old_sequence)
+                old_cmax = self.Cmax(new_sequence, self.n, self.m)
+                new_cmax = self.Cmax(new_sequence, self.n, self.m)
+                if new_cmax < old_cmax:
+                    old_sequence = new_sequence
+                    old_cmax = new_cmax
+                else:
+                    delta = new_cmax - old_cmax
+                    p = uniform(0, 1)
+                    if p <= self.getProbability(delta, T):
+                        old_sequence = new_sequence
+                        old_cmax = new_cmax
+            T *= 0.95
+            if best_cmax > old_cmax:
+                best_cmax = old_cmax
+                best_sequence = old_sequence
+        print(best_cmax, best_sequence[:, 0])
+        return best_cmax
+
+    def getProbability(self, delta, t):
+        return e ** (-delta / t)
+
+    def makeChart(self):
+        a = [10, 20, 50, 100, 200, 500, 1000, 2000]
+        iterDepth = T = [val for val in a for _ in range(10)]
+        t_sa = np.array([[T[i], self.simulatedAnnealing(T[i], 100)] for i in range(len(T))])
+        d_sa = np.array([[iterDepth[i], self.simulatedAnnealing(1000, iterDepth[i])] for i in range(len(T))])
+        d_rs = np.array([[iterDepth[i], self.randomSearch(iterDepth[i])] for i in range(len(T))])
+        return [t_sa, d_sa, d_rs]
+
+    def drawChart(self, tab):
+        ttt = ["temperature", "depth-SA", "depth-RS"]
+        yyy = "Cmax"
+        xxx = ["T", "iterations", "iterations"]
+        i = 0
+        for t in tab:
+            x = t[:, 0]
+            y = t[:, 1]
+            plt.scatter(x, y, label="stars", color="green",
+                        marker="*", s=30)
+
+            plt.xlabel(xxx[i])
+            plt.ylabel(yyy)
+            plt.title(ttt[i])
+            plt.legend()
+            plt.show()
+            i += 1
+
+    def SumSortP(self, n):
+        return [self.data[i] for i in sorted([*range(n)], key=lambda x: self.Psum(x), reverse=True)]
+
+    def Psum(self, n):
+        return sum(self.convertData(self.data)[n])
+
+    def convertData(self, data):
+        return np.array([i[1] for i in data])
+
+    def Neh(self, n, m):
+        SortedList = self.SumSortP(n)
+        CurrentTask = SortedList[0]
+        sequence = [CurrentTask]
+        best_sequence = []
+        for i in range(1, n):  # dla każdego zadania
+            BestCmax = float("inf")  # bardzo duża liczba
+            for j in range(i + 1):  # dla każdej pozycji w permutacji
+                temp_sequence = sequence[:]
+                temp_sequence.insert(j, SortedList[i])
+                n = len(temp_sequence)
+                CurrentCmax = self.Cmax(temp_sequence, n, m)
+                if CurrentCmax < BestCmax:
+                    best_sequence = temp_sequence
+                    BestCmax = CurrentCmax
+            sequence = best_sequence
+        return int(BestCmax)
 
 
 if __name__ == '__main__':
     result_tab = []
-    data = flow(n, m, 123123)
-    result = RS(data, n, m)
-    result_tab.append(result)
-    print('wyniki obliczone: ')
-    print(result_tab)
+    data = flow(10, 5, 123123)
+    print(data)
+    f = FlowShop(10, 5, 123123)
+    # f.Cmax(data, 10, 5)
+    # print("aaa")
+    # f.randomSearch(100)
+    # print(f.simulatedAnnealing(10000))
+    #
+    # print(f.Neh(10, 5))
+    # perm = combinations([*range(10)], 2)
+    # for i in list(perm):
+    #     print(i)
+    f.drawChart(f.makeChart())
+    a = range(10)
+    a = [val for val in a for _ in range(4)]
+    print(a)
