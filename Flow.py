@@ -55,7 +55,7 @@ class FlowShop:
         return data
 
     def swapInsert(self, data):
-        x1, x2 = 3, 6
+        x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
         data.insert(x1, data.pop(x2))
         return data
 
