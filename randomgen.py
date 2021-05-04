@@ -154,7 +154,7 @@ def flow(n, m, seed):
     # p = {str(j): [generator.nextInt(1, 99) for i in range(m)] for j in range(n)}
     p = [[j, [generator.nextInt(1, 99) for i in range(m)]] for j in range(n)]
     # p = [[generator.nextInt(1, 99) for i in range(m)] for j in range(n)]
-    return p
+    return np.array(p,dtype='object')
 def floww(n, m, seed):
     generator = RandomNumberGenerator(seed)
     # p = [{f"n-{str(j)} m-{str(i)}": generator.nextInt(1, 99) for i in range(m)} for j in range(n)]

@@ -55,9 +55,12 @@ class FlowShop:
         return data
 
     def swapInsert(self, data):
-        x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
+        x1, x2 = 3,6
+        idx = list(data[:, 0])
+        data = self.convertData(data)
         data.insert(x1, data.pop(x2))
-        return data
+        idx.insert(x1, idx.pop(x2))
+        return self.reconvertData(data, idx)
 
     def simulatedAnnealing(self, T, depth):
         best_sequence = old_sequence = self.data
@@ -119,7 +122,11 @@ class FlowShop:
         return sum(self.convertData(self.data)[n])
 
     def convertData(self, data):
-        return np.array([i[1] for i in data])
+        return [i[1] for i in data]
+        # return np.array([i[1] for i in data])
+
+    def reconvertData(self, data, idx):
+        return np.array([[idx[i], data[i]] for i in range(len(idx))], dtype='object')
 
     def Neh(self, n, m):
         SortedList = self.SumSortP(n)
@@ -158,4 +165,10 @@ if __name__ == '__main__':
     # a = range(10)
     # a = [val for val in a for _ in range(4)]
     # print(a)
+    print()
     print(f.swapInsert(data))
+    # print()
+    # x = f.convertData(data)
+    # print(x)
+    # print()
+    # print(f.reconvertData(x, [*range(10)]))
