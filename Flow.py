@@ -65,10 +65,10 @@ class FlowShop:
     def simulatedAnnealing(self, T, depth, func):
         best_sequence = old_sequence = self.data
         best_cmax = old_cmax = 9999999
-        while T > 0.1:
+        while T > 1:
             for _ in range(depth):
                 new_sequence = func(old_sequence)
-                old_cmax = self.Cmax(new_sequence, self.n, self.m)
+                old_cmax = self.Cmax(old_sequence, self.n, self.m)
                 new_cmax = self.Cmax(new_sequence, self.n, self.m)
                 if new_cmax < old_cmax:
                     old_sequence = new_sequence
@@ -90,11 +90,13 @@ class FlowShop:
         return e ** (-delta / t)
 
     def makeChart(self):
-        a = [10, 20, 50, 100, 200, 500, 1000, 2000]
+        a = [10, 20, 50, 100, 200, 500, 1000]
         iterDepth = T = [val for val in a for _ in range(30)]
         t_sa = np.array([[T[i], self.simulatedAnnealing(T[i], 100, self.swapPositions)] for i in range(len(T))])
+        print('1')
         d_sa = np.array(
             [[iterDepth[i], self.simulatedAnnealing(1000, iterDepth[i], self.swapPositions)] for i in range(len(T))])
+        print('2')
         d_rs = np.array([[iterDepth[i], self.randomSearch(iterDepth[i], self.swapPositions)] for i in range(len(T))])
         return [t_sa, d_sa, d_rs]
 
@@ -102,7 +104,8 @@ class FlowShop:
         SAinsert, SAneightbour, SAswap = [], [], []
         RSinsert, RSneightbour, RSswap = [], [], []
 
-        for _ in range(150):
+        for i in range(150):
+            print(i)
             SAinsert.append(self.simulatedAnnealing(100, 100, self.swapInsert))
             SAneightbour.append(self.simulatedAnnealing(100, 100, self.swapNeighbour))
             SAswap.append(self.simulatedAnnealing(100, 100, self.swapPositions))
@@ -110,13 +113,16 @@ class FlowShop:
             RSneightbour.append(self.randomSearch(100, self.swapNeighbour))
             RSswap.append(self.randomSearch(100, self.swapPositions))
         tab = [SAinsert, SAneightbour, SAswap, RSinsert, RSneightbour, RSswap]
-        for t in tab:
-            self.plotHist(t)
+        name = ["SAinsert", "SAneightbour", "SAswap", "RSinsert", "RSneightbour", "RSswap"]
+        for t in range(len(tab)):
+            self.plotHist(tab[t], name[t])
 
-    def plotHist(self, data):
+    def plotHist(self, data, title):
         x = data
+
         num_bins = 7
         n, bins, patches = plt.hist(x, num_bins, facecolor='blue', alpha=0.5)
+        plt.title(title)
         plt.show()
 
     def drawChart(self, tab):
