@@ -28,14 +28,14 @@ class FlowShop:
                 C[j][k] = max(C[j - 1][k], C[j][k - 1]) + data[j - 1][1][k - 1]
         return C[n][m]
 
-    def randomSearch(self, iteration_depth):
+    def randomSearch(self, iteration_depth, func):
         #           754.0 [3 0 9 2 8 6 5 4 7 1]
         best_cmax = 999999
         temp_sequence = self.data
         best_sequence = []
         for _ in range(iteration_depth):
             temp_cmax = self.Cmax(temp_sequence, self.n, self.m)
-            temp_sequence = self.swapPositions(temp_sequence)
+            temp_sequence = func(temp_sequence)
             if temp_cmax < best_cmax:
                 best_sequence = temp_sequence
                 best_cmax = temp_cmax
@@ -55,19 +55,19 @@ class FlowShop:
         return data
 
     def swapInsert(self, data):
-        x1, x2 = 3,6
+        x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
         idx = list(data[:, 0])
         data = self.convertData(data)
         data.insert(x1, data.pop(x2))
         idx.insert(x1, idx.pop(x2))
         return self.reconvertData(data, idx)
 
-    def simulatedAnnealing(self, T, depth):
+    def simulatedAnnealing(self, T, depth, func):
         best_sequence = old_sequence = self.data
         best_cmax = old_cmax = 9999999
-        while T > 0.01:
+        while T > 0.1:
             for _ in range(depth):
-                new_sequence = self.swapPositions(old_sequence)
+                new_sequence = func(old_sequence)
                 old_cmax = self.Cmax(new_sequence, self.n, self.m)
                 new_cmax = self.Cmax(new_sequence, self.n, self.m)
                 if new_cmax < old_cmax:
@@ -91,13 +91,36 @@ class FlowShop:
 
     def makeChart(self):
         a = [10, 20, 50, 100, 200, 500, 1000, 2000]
-        iterDepth = T = [val for val in a for _ in range(10)]
-        t_sa = np.array([[T[i], self.simulatedAnnealing(T[i], 100)] for i in range(len(T))])
-        d_sa = np.array([[iterDepth[i], self.simulatedAnnealing(1000, iterDepth[i])] for i in range(len(T))])
-        d_rs = np.array([[iterDepth[i], self.randomSearch(iterDepth[i])] for i in range(len(T))])
+        iterDepth = T = [val for val in a for _ in range(30)]
+        t_sa = np.array([[T[i], self.simulatedAnnealing(T[i], 100, self.swapPositions)] for i in range(len(T))])
+        d_sa = np.array(
+            [[iterDepth[i], self.simulatedAnnealing(1000, iterDepth[i], self.swapPositions)] for i in range(len(T))])
+        d_rs = np.array([[iterDepth[i], self.randomSearch(iterDepth[i], self.swapPositions)] for i in range(len(T))])
         return [t_sa, d_sa, d_rs]
 
+    def compareN(self):
+        SAinsert, SAneightbour, SAswap = [], [], []
+        RSinsert, RSneightbour, RSswap = [], [], []
+
+        for _ in range(150):
+            SAinsert.append(self.simulatedAnnealing(100, 100, self.swapInsert))
+            SAneightbour.append(self.simulatedAnnealing(100, 100, self.swapNeighbour))
+            SAswap.append(self.simulatedAnnealing(100, 100, self.swapPositions))
+            RSinsert.append(self.randomSearch(100, self.swapInsert))
+            RSneightbour.append(self.randomSearch(100, self.swapNeighbour))
+            RSswap.append(self.randomSearch(100, self.swapPositions))
+        tab = [SAinsert, SAneightbour, SAswap, RSinsert, RSneightbour, RSswap]
+        for t in tab:
+            self.plotHist(t)
+
+    def plotHist(self, data):
+        x = data
+        num_bins = 7
+        n, bins, patches = plt.hist(x, num_bins, facecolor='blue', alpha=0.5)
+        plt.show()
+
     def drawChart(self, tab):
+        print("a")
         ttt = ["temperature", "depth-SA", "depth-RS"]
         yyy = "Cmax"
         xxx = ["T", "iterations", "iterations"]
@@ -154,21 +177,23 @@ if __name__ == '__main__':
     f = FlowShop(10, 5, 123123)
     # f.Cmax(data, 10, 5)
     # print("aaa")
-    # f.randomSearch(100)
+    # f.randomSearch(100, f.swapPositions)
+    # f.simulatedAnnealing(1000, 100, f.swapPositions)
     # print(f.simulatedAnnealing(10000))
     #
     # print(f.Neh(10, 5))
     # perm = combinations([*range(10)], 2)
     # for i in list(perm):
     #     print(i)
-    # f.drawChart(f.makeChart())
+    f.drawChart(f.makeChart())
     # a = range(10)
     # a = [val for val in a for _ in range(4)]
     # print(a)
-    print()
-    print(f.swapInsert(data))
+    # print()
+    # print(f.swapInsert(data))
     # print()
     # x = f.convertData(data)
     # print(x)
     # print()
     # print(f.reconvertData(x, [*range(10)]))
+    # f.compareN()
