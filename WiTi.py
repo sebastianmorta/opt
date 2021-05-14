@@ -124,28 +124,14 @@ class Task:
         self.w = w
 
 
-def Ce(j, data, n):
-    # return sum([data[i].p for i in range(n) if j & (1 << i)])
-    C = [data[i].p for i in range(n)]
-    C.insert(0, 0)
-    B = [data[i].p + C[i - 1] for i in range(1, n) if j & (1 << i)]
-    print(C)
-    print(B)
-    return sum(B)
-
-
-def WiTi(C, w, d):
-    return max(0, C - d) * w
-
-
-def toCe(data, n):
-    pe = [data[i].p for i in range(n)]
-    return [sum(pe[:i]) for i in range(1, n + 1)]
-
-
-def crossingOperator(r1, r2):
-    idx1, idx2 = 2, 6
-    return r1[:idx1] + r2[idx1:idx2] + r1[idx2:], r2[:idx1] + r1[idx1:idx2] + r2[idx2:]
+# def Ce(j, data, n):
+#     # return sum([data[i].p for i in range(n) if j & (1 << i)])
+#     C = [data[i].p for i in range(n)]
+#     C.insert(0, 0)
+#     B = [data[i].p + C[i - 1] for i in range(1, n) if j & (1 << i)]
+#     print(C)
+#     print(B)
+#     return sum(B)
 
 
 # C += [data[i].p + C[i - 1] for i in range(1, n) if j & (1 << i)]
@@ -167,7 +153,7 @@ def SMTWT(n, data):
     return OPT_tab[perm - 1]
 
 
-def WiTi(n, data):
+def old(n, data):
     OPT_tab = [0]
     perm = 2 ** n
     for j in range(1, perm):
@@ -184,18 +170,55 @@ def WiTi(n, data):
     return OPT_tab[perm - 1]
 
 
-def alg(p, Pi):
-    best_sequence = old_sequence = Pi
+for i in range(10):
+    print(5 & (1 << i))
+
+
+class Genetic():
+    def __init__(self, data):
+        self.R = []
+        self.X = []
+        self.C = []
+        self.best_value = 99999999
+        self.best_sequence = []
+        self.data = data
+        self.n = len(data)
+
+    def WiTi(self, C, w, d):
+        return max(0, C - d) * w
+
+    def cFunc(self, perm):
+        pe = [self.data[perm[i]].p for i in range(self.n)]
+        return [sum(pe[:i]) for i in range(1, self.n + 1)]
+
+    def crossingOperator(self, r1, r2):
+        idx1, idx2 = 2, 6
+        return r1[:idx1] + r2[idx1:idx2] + r1[idx2:], r2[:idx1] + r1[idx1:idx2] + r2[idx2:]
+
+    def purposeFunc(self, Pi):
+        c = self.cFunc(Pi)
+        return sum([self.WiTi(c[i], data[Pi[i].w], data[Pi[i]].d)])
+
+
+def initialPerm(Pi, p):
+    sol = Genetic()
+    sol.best_sequence = sol.old_sequence = Pi
+
     best_value = old_value = 9999999
     for i in range(2, p):
         x = randint(0, len(data) - 1)
         C.append(0)
 
 
+def alg(p, Pi):
+    x = 1
+
+
 if __name__ == '__main__':
     result_tab = []
 
     data = ReadFile()
+    print(len(data))
     # n = len(data)
     # print(data)
     # result = WiTi(n, data)
@@ -203,8 +226,8 @@ if __name__ == '__main__':
     # print(toCe(data, n))
     # print('wynikiWITI: ')
     # print(result_tab)
-    print("chuj")
-    print(crossingOperator([10, 11, 12, 13, 14, 15, 16, 17, 18, 19], [*range(20, 30)]))
+
+    # print(crossingOperator([10, 11, 12, 13, 14, 15, 16, 17, 18, 19], [*range(20, 30)]))
 
 # a = ['asd', 'asdf', 'asdft4', 'urihhs']
 # b = ['11', '22', '3', '44']
@@ -216,5 +239,3 @@ if __name__ == '__main__':
 # a = [1]
 # a += [a[i]+1 for i in range(10)]
 # print(a)
-a = [1, 2, 3, 4, 5, 6]
-print(a[:4])
