@@ -154,14 +154,32 @@ def flow(n, m, seed):
     # p = {str(j): [generator.nextInt(1, 99) for i in range(m)] for j in range(n)}
     p = [[j, [generator.nextInt(1, 99) for i in range(m)]] for j in range(n)]
     # p = [[generator.nextInt(1, 99) for i in range(m)] for j in range(n)]
-    return np.array(p,dtype='object')
+    return np.array(p, dtype='object')
+
+
 def floww(n, m, seed):
     generator = RandomNumberGenerator(seed)
     # p = [{f"n-{str(j)} m-{str(i)}": generator.nextInt(1, 99) for i in range(m)} for j in range(n)]
     # p = {str(j): [generator.nextInt(1, 99) for i in range(m)] for j in range(n)}
     # p = [[j, [generator.nextInt(1, 99) for i in range(m)]] for j in range(n)]
     p = [[generator.nextInt(1, 99) for i in range(m)] for j in range(n)]
-    return np.array(p,dtype='object')
+    return np.array(p, dtype='object')
+
+
+def witi(n, m, seed):
+    generator = RandomNumberGenerator(seed)
+    p, d, w = [], [], []
+    for i in range(n):
+        p.append(generator.nextInt(1, 30))
+        w.append(generator.nextInt(1, 30))
+    for i in range(n):
+        d.append(generator.nextInt(1, sum(p)))
+    return p, d, w
+
+print(witi(10, 5, 123123))
+
+# ([27, 13, 19, 8, 9], [15, 62, 15, 73, 53], [29, 6, 29, 27, 9])
+
 
 # print(flow(10, 5, 182128))
 # print(assignment(4, seed=123123))
