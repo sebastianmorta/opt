@@ -106,8 +106,8 @@
 #     print(result_tab)
 #     print('Oczekiwane: ')
 #     print(wyniki_tab)
-from random import randint
-
+from random import randint, shuffle
+import random
 from randomgen import witi
 
 
@@ -202,12 +202,17 @@ class Genetic():
 
 def initialPerm(Pi, p):
     sol = Genetic()
-    sol.best_sequence = sol.old_sequence = Pi
-
-    best_value = old_value = 9999999
-    for i in range(2, p):
-        x = randint(0, len(data) - 1)
-        C.append(0)
+    sol.best_sequence = old_sequence = Pi
+    sol.best_value = old_value = sol.purposeFunc(sol.old_sequence)
+    sol.X.append(old_sequence)
+    for i in range(1, p):
+        new_sequence = old_sequence
+        shuffle(new_sequence)
+        new_value = sol.purposeFunc(new_sequence)
+        if new_value < old_value:
+            sol.best_value = new_value
+        old_sequence, old_value = new_sequence, new_value
+        sol.X.append(new_sequence)
 
 
 def alg(p, Pi):
@@ -219,6 +224,9 @@ if __name__ == '__main__':
 
     data = ReadFile()
     print(len(data))
+    a = [1, 2, 3, 4, 5, 6, 7, 8]
+    shuffle(a)
+    print(a)
     # n = len(data)
     # print(data)
     # result = WiTi(n, data)
@@ -226,7 +234,11 @@ if __name__ == '__main__':
     # print(toCe(data, n))
     # print('wynikiWITI: ')
     # print(result_tab)
+    number_list = [7, 14, 21, 28, 35, 42, 49, 56, 63, 70]
+    print("Original list : ", number_list)
 
+    random.shuffle(number_list)  # shuffle method
+    print("List after shuffle  : ", number_list)
     # print(crossingOperator([10, 11, 12, 13, 14, 15, 16, 17, 18, 19], [*range(20, 30)]))
 
 # a = ['asd', 'asdf', 'asdft4', 'urihhs']
