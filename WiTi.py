@@ -174,6 +174,10 @@ for i in range(10):
     print(5 & (1 << i))
 
 
+def takeSecond(elem):
+    return elem[1]
+
+
 class Genetic():
     def __init__(self, data):
         self.R = []
@@ -199,12 +203,34 @@ class Genetic():
         c = self.cFunc(Pi)
         return sum([self.WiTi(c[i], data[Pi[i].w], data[Pi[i]].d)])
 
+    def rmvItem(self, list1, list2):
+        rm1, rm2 = random.choice(list1), random.choice(list2)
+        list1.remove(rm1)
+        list2.remove(rm2)
+        return (rm1, rm2), list1, list2
 
-def initialPerm(Pi, p):
-    sol = Genetic()
+    def pickParents(self, perms):
+        idx1, idx2 = int(len(perms) / 3), int(len(perms) / 3 * 2)
+        perms.sort(key=takeSecond)
+        best, medium, weak = perms[:idx1], perms[idx1:idx2], perms[idx2:]
+        print("best", best)
+        print("med", medium)
+        print("weak", weak)
+        print(idx1, idx2, len(perms))
+        a, best, weak = self.rmvItem(best, weak)
+        # a=(random.choice(best),random.choice(weak))
+        print("best", best)
+        print("med", medium)
+        print("weak", weak)
+        print(idx1, idx2, len(perms))
+        print('a', a)
+
+
+def initialPerm(Pi, p, data):
+    sol = Genetic(data)
     sol.best_sequence = old_sequence = Pi
-    sol.best_value = old_value = sol.purposeFunc(sol.old_sequence)
-    sol.X.append(old_sequence)
+    sol.best_value = old_value = sol.purposeFunc(old_sequence)
+    sol.X.append([old_sequence, old_value])
     for i in range(1, p):
         new_sequence = old_sequence
         shuffle(new_sequence)
@@ -212,7 +238,7 @@ def initialPerm(Pi, p):
         if new_value < old_value:
             sol.best_value = new_value
         old_sequence, old_value = new_sequence, new_value
-        sol.X.append(new_sequence)
+        sol.X.append([new_sequence, new_value])
 
 
 def alg(p, Pi):
@@ -234,13 +260,18 @@ if __name__ == '__main__':
     # print(toCe(data, n))
     # print('wynikiWITI: ')
     # print(result_tab)
-    number_list = [7, 14, 21, 28, 35, 42, 49, 56, 63, 70]
-    print("Original list : ", number_list)
-
-    random.shuffle(number_list)  # shuffle method
-    print("List after shuffle  : ", number_list)
+    # number_list = [7, 14, 21, 28, 35, 42, 49, 56, 63, 70]
+    # print("Original list : ", number_list)
+    #
+    # random.shuffle(number_list)  # shuffle method
+    # print("List after shuffle  : ", number_list)
     # print(crossingOperator([10, 11, 12, 13, 14, 15, 16, 17, 18, 19], [*range(20, 30)]))
+    A = [[[1, 2, 13, 41, 5, 61, 7], 7], [[1, 2, 13, 41, 51, 6, 71], 6], [[11, 2, 13, 4, 51, 6, 7], 3],
+         [[1, 21, 3, 41, 5, 61, 7], 4], [[1, 2, 3, 4, 15, 6, 17], 1], [[1, 12, 3, 41, 5, 6, 7], 2],
+         [[1, 12, 3, 41, 5, 6, 7], 9], ]
 
+    g = Genetic(data)
+    g.pickParents(A)
 # a = ['asd', 'asdf', 'asdft4', 'urihhs']
 # b = ['11', '22', '3', '44']
 # v = set(a)
