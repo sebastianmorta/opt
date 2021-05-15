@@ -170,10 +170,6 @@ def old(n, data):
     return OPT_tab[perm - 1]
 
 
-# for i in range(10):
-#     print(5 & (1 << i))
-
-
 def takeSecond(elem):
     return elem[1]
 
@@ -206,7 +202,7 @@ class Genetic():
 
     def purposeFunc(self, Pi):
         c = self.cFunc(Pi)
-        return sum([self.WiTi(c[i], data[Pi[i].w], data[Pi[i]].d) for i in range(len(Pi))])
+        return sum([self.WiTi(c[i], data[Pi[i]].w, data[Pi[i]].d) for i in range(len(Pi))])
 
     def rmvItem(self, list1, list2):
         rm1 = random.choice(list1)
@@ -256,39 +252,82 @@ class Genetic():
         while (len(self.best) + len(self.medium) + len(self.weak)) > 1:
             self.makeParents()
 
+    def updateBestForChild(self):
+        for c in self.C:
+            if c[1] < self.best_value:
+                print("bm", c)
+                self.best_value = c[1]
+                self.best_sequence = list.copy(c[0])
+            c_perm, c_val,boo = self.mutating(c)
+            if boo:
+                self.C.append((c_perm, c_val))
+                print("am", c)
+                if c_val < self.best_value:
+                    self.best_value = c_val
+                    self.best_sequence = list.copy(c_perm)
 
-def initialPerm(Pi, p, data, sol):
-    sol.best_sequence = old_sequence = Pi
-    sol.best_value = old_value = sol.purposeFunc(old_sequence)
+    # def swapInsert(self, perm):
+    #     x1, x2 = randint(0, len(perm) - 1), randint(0, len(perm) - 1)
+    #     print("x1,x2", x1, x2)
+    #     print(perm)
+    #     perm.insert(x1, data.pop(x2))
+    #     print("perminsert",perm)
+    #     return perm
+
+    def swap(self, data):
+        x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
+        data[x1], data[x2] = data[x2], data[x1]
+        return data
+
+    def mutating(self, child):
+        if randint(1, 100) < 5:
+            c = self.swap(child[0])
+            print("patrztu", c)
+            c_val = self.purposeFunc(c)
+            return c, c_val,True
+        else:
+            return child[0], child[1],False
+
+
+def initialPerm(Pi, p, sol):
+    old_sequence = list.copy(Pi)
+    sol.best_sequence = list.copy(Pi)
+    old_value = sol.purposeFunc(old_sequence)
+    sol.best_value = old_value
     sol.X.append((old_sequence, old_value))
     for i in range(1, p):
-        new_sequence = old_sequence
+        new_sequence = list.copy(old_sequence)
         shuffle(new_sequence)
         new_value = sol.purposeFunc(new_sequence)
+        sol.X.append((new_sequence, new_value))
         if new_value < old_value:
             sol.best_value = new_value
-        old_sequence, old_value = new_sequence, new_value
-        sol.X.append((new_sequence, new_value))
+            sol.best_sequence = list.copy(new_sequence)
+        old_sequence, old_value = list.copy(new_sequence), new_value
 
 
-def alg(p, Pi, data):
+def makeChildren(p, Pi, data):
     sol = Genetic(data)
-    initialPerm(Pi, p, data, sol)
+    initialPerm(Pi, p, sol)
     sol.pickParents(sol.X)
     for i in range(len(sol.R)):
-        c1, c2 = sol.crossingOperator(sol.R[i][0], sol.R[i][1])
-        sol.C.append(c1)
-        sol.C.append(c2)
+        c1, c2 = sol.crossingOperator(sol.R[i][0][0], sol.R[i][1][0])
+        c1_val, c2_val = sol.purposeFunc(c1), sol.purposeFunc(c2)
+        sol.C.append((c1, c1_val))
+        sol.C.append((c2, c2_val))
+    sol.updateBestForChild()
 
 
 if __name__ == '__main__':
     result_tab = []
 
     data = ReadFile()
-    print(len(data))
-    a = [1, 2, 3, 4, 5, 6, 7, 8]
-    shuffle(a)
-    print(a)
+    makeChildren(10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], data)
+
+    # print(len(data))
+    # a = [1, 2, 3, 4, 5, 6, 7, 8]
+    # shuffle(a)
+    # print(a)
     # n = len(data)
     # print(data)
     # result = WiTi(n, data)
@@ -306,8 +345,8 @@ if __name__ == '__main__':
          ([1, 21, 3, 41, 5, 61, 7], 4), ([1, 2, 3, 4, 15, 6, 17], 1), ([1, 12, 3, 41, 5, 6, 7], 2),
          ([1, 12, 3, 41, 5, 6, 7], 9)]
 
-    g = Genetic(data)
-    g.pickParents(A)
+    # g = Genetic(data)
+    # g.pickParents(A)
 # a = ['asd', 'asdf', 'asdft4', 'urihhs']
 # b = ['11', '22', '3', '44']
 # v = set(a)

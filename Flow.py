@@ -58,7 +58,9 @@ class FlowShop:
         x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
         idx = list(data[:, 0])
         data = self.convertData(data)
+        print("datab",data)
         data.insert(x1, data.pop(x2))
+        print("dataa", data)
         idx.insert(x1, idx.pop(x2))
         return self.reconvertData(data, idx)
 
@@ -184,14 +186,14 @@ if __name__ == '__main__':
     # f.Cmax(data, 10, 5)
     # print("aaa")
     # f.randomSearch(100, f.swapPositions)
-    # f.simulatedAnnealing(1000, 100, f.swapPositions)
+    f.simulatedAnnealing(1000, 100, f.swapInsert)
     # print(f.simulatedAnnealing(10000))
     #
     # print(f.Neh(10, 5))
     # perm = combinations([*range(10)], 2)
     # for i in list(perm):
     #     print(i)
-    f.drawChart(f.makeChart())
+    # f.drawChart(f.makeChart())
     # a = range(10)
     # a = [val for val in a for _ in range(4)]
     # print(a)
