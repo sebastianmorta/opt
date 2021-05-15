@@ -233,7 +233,6 @@ class Genetic():
     def pickParents(self, perms):
         idx1, idx2 = int(len(perms) / 3), int(len(perms) / 3 * 2)
         perms.sort(key=takeSecond)
-        print(perms)
         self.best, self.medium, self.weak = perms[:idx1], perms[idx1:idx2], perms[idx2:]
         while (len(self.best) + len(self.medium) + len(self.weak)) > 1:
             self.makeParents()
@@ -266,12 +265,11 @@ class Genetic():
     def selection(self):
         Tmp = self.X + self.C
         Tmp.sort(key=takeSecond)
-        print("tmp", Tmp)
         self.X.clear()
         self.C.clear()
         self.R.clear()
         self.X = Tmp[:int(self.n * 0.2)] + random.sample(Tmp[int(self.n * 0.2):], int(self.n * 0.81))
-        print(len(self.X), "X", self.X)
+
 
     def initialPerm(self, Pi, p):
         old_sequence = list.copy(Pi)
@@ -301,10 +299,12 @@ class Genetic():
 def makeChildren(p, Pi, data):
     sol = Genetic(data)
     sol.initialPerm(Pi, p)
-    sol.pickParents(sol.X)
-    sol.makeChildren()
-    sol.updateBestForChild()
-    sol.selection()
+    for i in range(5):
+        sol.pickParents(sol.X)
+        sol.makeChildren()
+        sol.updateBestForChild()
+        sol.selection()
+    print("best is ",sol.best_value,sol.best_sequence)
 
 
 if __name__ == '__main__':
