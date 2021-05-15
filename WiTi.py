@@ -248,6 +248,7 @@ class Genetic():
     def pickParents(self, perms):
         idx1, idx2 = int(len(perms) / 3), int(len(perms) / 3 * 2)
         perms.sort(key=takeSecond)
+        print(perms)
         self.best, self.medium, self.weak = perms[:idx1], perms[idx1:idx2], perms[idx2:]
         while (len(self.best) + len(self.medium) + len(self.weak)) > 1:
             self.makeParents()
@@ -255,24 +256,14 @@ class Genetic():
     def updateBestForChild(self):
         for c in self.C:
             if c[1] < self.best_value:
-                print("bm", c)
                 self.best_value = c[1]
                 self.best_sequence = list.copy(c[0])
-            c_perm, c_val,boo = self.mutating(c)
+            c_perm, c_val, boo = self.mutating(c)
             if boo:
                 self.C.append((c_perm, c_val))
-                print("am", c)
                 if c_val < self.best_value:
                     self.best_value = c_val
                     self.best_sequence = list.copy(c_perm)
-
-    # def swapInsert(self, perm):
-    #     x1, x2 = randint(0, len(perm) - 1), randint(0, len(perm) - 1)
-    #     print("x1,x2", x1, x2)
-    #     print(perm)
-    #     perm.insert(x1, data.pop(x2))
-    #     print("perminsert",perm)
-    #     return perm
 
     def swap(self, data):
         x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
@@ -282,13 +273,20 @@ class Genetic():
     def mutating(self, child):
         if randint(1, 100) < 5:
             c = self.swap(child[0])
-            print("patrztu", c)
             c_val = self.purposeFunc(c)
-            return c, c_val,True
+            return c, c_val, True
         else:
-            return child[0], child[1],False
+            return child[0], child[1], False
 
-
+    def selection(self):
+        Tmp = self.X + self.C
+        Tmp.sort(key=takeSecond)
+        print("tmp",Tmp)
+        self.X.clear()
+        self.C.clear()
+        self.R.clear()
+        self.X=Tmp[:int(self.n*0.2)]+random.sample(Tmp[int(self.n*0.2):], int(self.n*0.81))
+        print("X",self.X)
 def initialPerm(Pi, p, sol):
     old_sequence = list.copy(Pi)
     sol.best_sequence = list.copy(Pi)
@@ -316,6 +314,7 @@ def makeChildren(p, Pi, data):
         sol.C.append((c1, c1_val))
         sol.C.append((c2, c2_val))
     sol.updateBestForChild()
+    sol.selection()
 
 
 if __name__ == '__main__':
