@@ -1,0 +1,1 @@
+# opt Witam wszystkich zebranych
