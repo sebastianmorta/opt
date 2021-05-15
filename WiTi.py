@@ -187,10 +187,9 @@ class Genetic():
         self.best_sequence = []
         self.data = data
         self.n = len(data)
-        self.best=[]
-        self.medium=[]
-        self.weak=[]
-
+        self.best = []
+        self.medium = []
+        self.weak = []
 
     def WiTi(self, C, w, d):
         return max(0, C - d) * w
@@ -200,29 +199,32 @@ class Genetic():
         return [sum(pe[:i]) for i in range(1, self.n + 1)]
 
     def crossingOperator(self, r1, r2):
-        idx1, idx2 = 2, 6
+        tmp1, tmp2 = randint(0, self.n), randint(0, self.n)
+        idx1 = min(tmp1, tmp2)
+        idx2 = max(tmp1, tmp2)
         return r1[:idx1] + r2[idx1:idx2] + r1[idx2:], r2[:idx1] + r1[idx1:idx2] + r2[idx2:]
 
     def purposeFunc(self, Pi):
         c = self.cFunc(Pi)
-        return sum([self.WiTi(c[i], data[Pi[i].w], data[Pi[i]].d)])
+        return sum([self.WiTi(c[i], data[Pi[i].w], data[Pi[i]].d) for i in range(len(Pi))])
 
     def rmvItem(self, list1, list2):
-        rm1, rm2 = random.choice(list1), random.choice(list2)
+        rm1 = random.choice(list1)
         list1.remove(rm1)
+        rm2 = random.choice(list2)
         list2.remove(rm2)
         return (rm1, rm2), list1, list2
 
-    def tmp(self):
+    def makeParents(self):
         dict = {1: self.best, 2: self.medium, 3: self.weak}
         if len(self.best) and len(self.medium):
             a = dict[randint(1, 2)]
         elif len(self.best) and not len(self.medium):
             a = dict[1]
-        elif not len(self.best) and  len(self.medium):
+        elif not len(self.best) and len(self.medium):
             a = dict[2]
-        elif len(self.weak)>1:
-            a=dict[3]
+        elif len(self.weak) > 1:
+            a = dict[3]
         else:
             return "xd"
         if len(self.best) and len(self.medium) and len(self.weak):
@@ -237,40 +239,28 @@ class Genetic():
             b = dict[3]
         else:
             return "xd"
-
-        self.R, a, b = self.rmvItem(a, b)
+        if a == b:
+            if len(a) > 1:
+                t, a, b = self.rmvItem(a, b)
+                self.R.append(t)
+            else:
+                pass
+        else:
+            t, a, b = self.rmvItem(a, b)
+            self.R.append(t)
 
     def pickParents(self, perms):
         idx1, idx2 = int(len(perms) / 3), int(len(perms) / 3 * 2)
         perms.sort(key=takeSecond)
         self.best, self.medium, self.weak = perms[:idx1], perms[idx1:idx2], perms[idx2:]
-        print("best",self.best)
-        print("med", self.medium)
-        print("weak",self.weak)
-        print(idx1, idx2, len(perms))
-        # a, best, weak = self.rmvItem(best, weak)
-        print("------------------------")
-
-        # a=(random.choice(best),random.choice(weak))
-        while (len(self.best) +len(self.medium) + len(self.weak))>1:
-            self.tmp()
-            # self.R, a, b = self.rmvItem(a, b)
-        print("best", self.best)
-        print("med",  self.medium)
-        print("weak", self.weak)
-        print(idx1, idx2, len(perms))
-        print('a', a)
-        print(self.R)
+        while (len(self.best) + len(self.medium) + len(self.weak)) > 1:
+            self.makeParents()
 
 
-print(random.randrange(1, 3, 2))
-
-
-def initialPerm(Pi, p, data):
-    sol = Genetic(data)
+def initialPerm(Pi, p, data, sol):
     sol.best_sequence = old_sequence = Pi
     sol.best_value = old_value = sol.purposeFunc(old_sequence)
-    sol.X.append([old_sequence, old_value])
+    sol.X.append((old_sequence, old_value))
     for i in range(1, p):
         new_sequence = old_sequence
         shuffle(new_sequence)
@@ -278,11 +268,17 @@ def initialPerm(Pi, p, data):
         if new_value < old_value:
             sol.best_value = new_value
         old_sequence, old_value = new_sequence, new_value
-        sol.X.append([new_sequence, new_value])
+        sol.X.append((new_sequence, new_value))
 
 
-def alg(p, Pi):
-    x = 1
+def alg(p, Pi, data):
+    sol = Genetic(data)
+    initialPerm(Pi, p, data, sol)
+    sol.pickParents(sol.X)
+    for i in range(len(sol.R)):
+        c1, c2 = sol.crossingOperator(sol.R[i][0], sol.R[i][1])
+        sol.C.append(c1)
+        sol.C.append(c2)
 
 
 if __name__ == '__main__':
@@ -306,9 +302,9 @@ if __name__ == '__main__':
     # random.shuffle(number_list)  # shuffle method
     # print("List after shuffle  : ", number_list)
     # print(crossingOperator([10, 11, 12, 13, 14, 15, 16, 17, 18, 19], [*range(20, 30)]))
-    A = [[[1, 2, 13, 41, 5, 61, 7], 7], [[1, 2, 13, 41, 51, 6, 71], 6], [[11, 2, 13, 4, 51, 6, 7], 3],
-         [[1, 21, 3, 41, 5, 61, 7], 4], [[1, 2, 3, 4, 15, 6, 17], 1], [[1, 12, 3, 41, 5, 6, 7], 2],
-         [[1, 12, 3, 41, 5, 6, 7], 9], ]
+    A = [([1, 2, 13, 41, 5, 61, 7], 7), ([1, 2, 13, 41, 51, 6, 71], 6), ([11, 2, 13, 4, 51, 6, 7], 3),
+         ([1, 21, 3, 41, 5, 61, 7], 4), ([1, 2, 3, 4, 15, 6, 17], 1), ([1, 12, 3, 41, 5, 6, 7], 2),
+         ([1, 12, 3, 41, 5, 6, 7], 9)]
 
     g = Genetic(data)
     g.pickParents(A)
