@@ -170,8 +170,8 @@ def old(n, data):
     return OPT_tab[perm - 1]
 
 
-for i in range(10):
-    print(5 & (1 << i))
+# for i in range(10):
+#     print(5 & (1 << i))
 
 
 def takeSecond(elem):
@@ -187,6 +187,10 @@ class Genetic():
         self.best_sequence = []
         self.data = data
         self.n = len(data)
+        self.best=[]
+        self.medium=[]
+        self.weak=[]
+
 
     def WiTi(self, C, w, d):
         return max(0, C - d) * w
@@ -209,21 +213,57 @@ class Genetic():
         list2.remove(rm2)
         return (rm1, rm2), list1, list2
 
+    def tmp(self):
+        dict = {1: self.best, 2: self.medium, 3: self.weak}
+        if len(self.best) and len(self.medium):
+            a = dict[randint(1, 2)]
+        elif len(self.best) and not len(self.medium):
+            a = dict[1]
+        elif not len(self.best) and  len(self.medium):
+            a = dict[2]
+        elif len(self.weak)>1:
+            a=dict[3]
+        else:
+            return "xd"
+        if len(self.best) and len(self.medium) and len(self.weak):
+            b = dict[randint(1, 3)]
+        elif len(self.best) and len(self.medium):
+            b = dict[randint(1, 2)]
+        elif len(self.weak) and len(self.best):
+            b = dict[random.randrange(1, 4, 2)]
+        elif len(self.weak) and len(self.best):
+            b = dict[randint(2, 3)]
+        elif len(self.weak):
+            b = dict[3]
+        else:
+            return "xd"
+
+        self.R, a, b = self.rmvItem(a, b)
+
     def pickParents(self, perms):
         idx1, idx2 = int(len(perms) / 3), int(len(perms) / 3 * 2)
         perms.sort(key=takeSecond)
-        best, medium, weak = perms[:idx1], perms[idx1:idx2], perms[idx2:]
-        print("best", best)
-        print("med", medium)
-        print("weak", weak)
+        self.best, self.medium, self.weak = perms[:idx1], perms[idx1:idx2], perms[idx2:]
+        print("best",self.best)
+        print("med", self.medium)
+        print("weak",self.weak)
         print(idx1, idx2, len(perms))
-        a, best, weak = self.rmvItem(best, weak)
+        # a, best, weak = self.rmvItem(best, weak)
+        print("------------------------")
+
         # a=(random.choice(best),random.choice(weak))
-        print("best", best)
-        print("med", medium)
-        print("weak", weak)
+        while (len(self.best) +len(self.medium) + len(self.weak))>1:
+            self.tmp()
+            # self.R, a, b = self.rmvItem(a, b)
+        print("best", self.best)
+        print("med",  self.medium)
+        print("weak", self.weak)
         print(idx1, idx2, len(perms))
         print('a', a)
+        print(self.R)
+
+
+print(random.randrange(1, 3, 2))
 
 
 def initialPerm(Pi, p, data):
