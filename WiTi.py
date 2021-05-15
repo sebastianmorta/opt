@@ -124,21 +124,6 @@ class Task:
         self.w = w
 
 
-# def Ce(j, data, n):
-#     # return sum([data[i].p for i in range(n) if j & (1 << i)])
-#     C = [data[i].p for i in range(n)]
-#     C.insert(0, 0)
-#     B = [data[i].p + C[i - 1] for i in range(1, n) if j & (1 << i)]
-#     print(C)
-#     print(B)
-#     return sum(B)
-
-
-# C += [data[i].p + C[i - 1] for i in range(1, n) if j & (1 << i)]
-# return sum(C)
-# return sum([data[i].p for i in range(n) if j & (1 << i)])
-
-
 def SMTWT(n, data):
     OPT_tab = [0]
     perm = 2 ** n
@@ -281,78 +266,49 @@ class Genetic():
     def selection(self):
         Tmp = self.X + self.C
         Tmp.sort(key=takeSecond)
-        print("tmp",Tmp)
+        print("tmp", Tmp)
         self.X.clear()
         self.C.clear()
         self.R.clear()
-        self.X=Tmp[:int(self.n*0.2)]+random.sample(Tmp[int(self.n*0.2):], int(self.n*0.81))
-        print("X",self.X)
-def initialPerm(Pi, p, sol):
-    old_sequence = list.copy(Pi)
-    sol.best_sequence = list.copy(Pi)
-    old_value = sol.purposeFunc(old_sequence)
-    sol.best_value = old_value
-    sol.X.append((old_sequence, old_value))
-    for i in range(1, p):
-        new_sequence = list.copy(old_sequence)
-        shuffle(new_sequence)
-        new_value = sol.purposeFunc(new_sequence)
-        sol.X.append((new_sequence, new_value))
-        if new_value < old_value:
-            sol.best_value = new_value
-            sol.best_sequence = list.copy(new_sequence)
-        old_sequence, old_value = list.copy(new_sequence), new_value
+        self.X = Tmp[:int(self.n * 0.2)] + random.sample(Tmp[int(self.n * 0.2):], int(self.n * 0.81))
+        print(len(self.X), "X", self.X)
+
+    def initialPerm(self, Pi, p):
+        old_sequence = list.copy(Pi)
+        self.best_sequence = list.copy(Pi)
+        old_value = self.purposeFunc(old_sequence)
+        self.best_value = old_value
+        self.X.append((old_sequence, old_value))
+        for i in range(1, p):
+            new_sequence = list.copy(old_sequence)
+            shuffle(new_sequence)
+            new_value = self.purposeFunc(new_sequence)
+            self.X.append((new_sequence, new_value))
+            if new_value < old_value:
+                self.best_value = new_value
+                self.best_sequence = list.copy(new_sequence)
+            old_sequence, old_value = list.copy(new_sequence), new_value
+
+    def makeChildren(self):
+        for i in range(len(self.R)):
+            c1, c2 = self.crossingOperator(self.R[i][0][0], self.R[i][1][0])
+            c1_val, c2_val = self.purposeFunc(c1), self.purposeFunc(c2)
+            self.C.append((c1, c1_val))
+            self.C.append((c2, c2_val))
+
 
 
 def makeChildren(p, Pi, data):
     sol = Genetic(data)
-    initialPerm(Pi, p, sol)
+    sol.initialPerm(Pi, p)
     sol.pickParents(sol.X)
-    for i in range(len(sol.R)):
-        c1, c2 = sol.crossingOperator(sol.R[i][0][0], sol.R[i][1][0])
-        c1_val, c2_val = sol.purposeFunc(c1), sol.purposeFunc(c2)
-        sol.C.append((c1, c1_val))
-        sol.C.append((c2, c2_val))
+    sol.makeChildren()
     sol.updateBestForChild()
     sol.selection()
 
 
 if __name__ == '__main__':
     result_tab = []
-
     data = ReadFile()
-    makeChildren(10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], data)
-
-    # print(len(data))
-    # a = [1, 2, 3, 4, 5, 6, 7, 8]
-    # shuffle(a)
-    # print(a)
-    # n = len(data)
-    # print(data)
-    # result = WiTi(n, data)
-    # result_tab.append(result)
-    # print(toCe(data, n))
-    # print('wynikiWITI: ')
-    # print(result_tab)
-    # number_list = [7, 14, 21, 28, 35, 42, 49, 56, 63, 70]
-    # print("Original list : ", number_list)
-    #
-    # random.shuffle(number_list)  # shuffle method
-    # print("List after shuffle  : ", number_list)
-    # print(crossingOperator([10, 11, 12, 13, 14, 15, 16, 17, 18, 19], [*range(20, 30)]))
-    A = [([1, 2, 13, 41, 5, 61, 7], 7), ([1, 2, 13, 41, 51, 6, 71], 6), ([11, 2, 13, 4, 51, 6, 7], 3),
-         ([1, 21, 3, 41, 5, 61, 7], 4), ([1, 2, 3, 4, 15, 6, 17], 1), ([1, 12, 3, 41, 5, 6, 7], 2),
-         ([1, 12, 3, 41, 5, 6, 7], 9)]
-
-    # g = Genetic(data)
-    # g.pickParents(A)
-# a = ['asd', 'asdf', 'asdft4', 'urihhs']
-# b = ['11', '22', '3', '44']
-# v = set(a)
-# print(v)
-#
-# print([[x, c] for x, c in zip(a, b)])
-
-# a = [1]
-# a += [a[i]+1 for i in range(10)]
-# print(a)
+    n = len(data)
+    makeChildren(n, [*range(n)], data)
