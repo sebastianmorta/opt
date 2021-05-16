@@ -166,7 +166,7 @@ def floww(n, m, seed):
     return np.array(p, dtype='object')
 
 
-def witi(n, m, seed):
+def witi(n, seed):
     generator = RandomNumberGenerator(seed)
     p, d, w = [], [], []
     for i in range(n):
@@ -176,7 +176,7 @@ def witi(n, m, seed):
         d.append(generator.nextInt(1, sum(p)))
     return p, d, w
 
-print(witi(10, 5, 123123))
+# print(witi(10, 5, 123123))
 
 
 def rosen(n, seed):
