@@ -3,11 +3,10 @@ import random
 from randomgen import witi
 
 
-def getData():
-    n = 10
+def getData(n):
     p, d, w = witi(n, 123123)
-    data = [Task(p[i], d[i], w[i]) for i in range(n)]
-    return data
+    __data__ = [Task(p[i], d[i], w[i]) for i in range(n)]
+    return __data__
 
 
 class Task:
@@ -22,19 +21,20 @@ def takeSecond(elem):
 
 
 class Genetic:
-    def __init__(self, data):
+    def __init__(self, __data__):
         self.R = []
         self.X = []
         self.C = []
         self.best_value = 99999999
         self.best_sequence = []
-        self.data = data
-        self.n = len(data)
+        self.data = __data__
+        self.n = len(__data__)
         self.best = []
         self.medium = []
         self.weak = []
 
-    def WiTi(self, C, w, d):
+    @staticmethod
+    def WiTi(C, w, d):
         return max(0, C - d) * w
 
     def cFunc(self, perm):
@@ -70,7 +70,8 @@ class Genetic:
             i += 1
         return c1, c2
 
-    def test(self, r, c, c_inherited, current_r_position, i):
+    @staticmethod
+    def test(r, c, c_inherited, current_r_position, i):
         test_c = c[i]
         if test_c == -1:
             r_trait = r[current_r_position]
@@ -81,10 +82,10 @@ class Genetic:
             c_inherited.append(r_trait)
 
     def purposeFunc(self, Pi):
-        c = self.cFunc(Pi)
-        return sum([self.WiTi(c[i], data[Pi[i]].w, data[Pi[i]].d) for i in range(len(Pi))])
+        return sum([self.WiTi(self.cFunc(Pi)[i], self.data[Pi[i]].w, self.data[Pi[i]].d) for i in range(len(Pi))])
 
-    def rmvItem(self, list1, list2):
+    @staticmethod
+    def rmvItem(list1, list2):
         rm1 = random.choice(list1)
         list1.remove(rm1)
         rm2 = random.choice(list2)
@@ -92,16 +93,16 @@ class Genetic:
         return (rm1, rm2), list1, list2
 
     def makeParents(self):
-        dict = {1: self.best, 2: self.medium, 3: self.weak}
+        quality = {1: self.best, 2: self.medium, 3: self.weak}
         while True:
             if (len(self.best) + len(self.medium) + len(self.weak)) > 1:
-                a = dict[randint(1, 2)]
-                b = dict[randint(1, 3)]
+                a = quality[randint(1, 2)]
+                b = quality[randint(1, 3)]
                 if len(a) > 0 and len(b) > 0:
                     break
                 else:
-                    a = dict[randint(1, 3)]
-                    b = dict[randint(1, 3)]
+                    a = quality[randint(1, 3)]
+                    b = quality[randint(1, 3)]
                     if len(a) > 0 and len(b) > 0:
                         break
             else:
@@ -136,10 +137,11 @@ class Genetic:
                     self.best_value = c_val
                     self.best_sequence = list.copy(c_perm)
 
-    def swap(self, data):
-        x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
-        data[x1], data[x2] = data[x2], data[x1]
-        return data
+    @staticmethod
+    def swap(__data__):
+        x1, x2 = randint(0, len(__data__) - 1), randint(0, len(__data__) - 1)
+        __data__[x1], __data__[x2] = __data__[x2], __data__[x1]
+        return __data__
 
     def mutating(self, child):
         if randint(1, 100) < 5:
@@ -182,8 +184,8 @@ class Genetic:
             self.C.append((c2, c2_val))
 
 
-def calculate(p, Pi, data):
-    sol = Genetic(data)
+def calculate(p, Pi, __data__):
+    sol = Genetic(__data__)
     sol.initialPerm(Pi, p)
     for i in range(500):
         sol.pickParents(sol.X)
@@ -194,7 +196,5 @@ def calculate(p, Pi, data):
 
 
 if __name__ == '__main__':
-    result_tab = []
-    data = getData()
-    n = len(data)
-    calculate(n, [*range(n)], data)
+    n = 10
+    calculate(n, [*range(n)], getData(n))

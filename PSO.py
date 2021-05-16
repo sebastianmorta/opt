@@ -2,14 +2,16 @@ from randomgen import rosen
 import random
 import numpy as np
 
+
 def rosenbrock(x):
     n = len(x)
     sum = 0
-    for i in range(n-1):
-        sum += 100 * (x[i+1]-x[i]**2)**2 + (1-x[i]**2) # nie wiem czy dobrze
+    for i in range(n - 1):
+        sum += 100 * (x[i + 1] - x[i] ** 2) ** 2 + (1 - x[i] ** 2)  # nie wiem czy dobrze
     return sum
 
-#PARAMETRY
+
+# PARAMETRY
 # praticles_number  - liczba czastek
 # W - kierunek (inertia coefficient),
 # c1 - przyspieszenie osobiste (cognitive coefficient),
@@ -24,7 +26,8 @@ max_iterations = 10
 num_variables = 5
 seed = 123123
 
-class Particle():
+
+class Particle:
     def __init__(self):
         self.position = np.array(rosen(num_variables, seed))
         self.pbest_position = self.position
@@ -38,13 +41,12 @@ class Particle():
         self.position = self.position + self.velocity
 
 
-class Space():
-
+class Space:
     def __init__(self, n_particles):
         self.n_particles = n_particles
         self.particles = []
         self.gbest_value = float('inf')
-        self.gbest_position = np.array([random.random() * 50] * num_variables) #byc moze do poprawy
+        self.gbest_position = np.array([random.random() * 50] * num_variables)  # byc moze do poprawy
 
     def print_particles(self):
         for particle in self.particles:
@@ -56,28 +58,29 @@ class Space():
             ret += coordinate ** 2
         return ret + 1
 
-    def set_pbest(self):
+    def setPbest(self):
         for particle in self.particles:
             fitness_cadidate = self.fitness(particle)
             if (particle.pbest_value > fitness_cadidate):
                 particle.pbest_value = fitness_cadidate
                 particle.pbest_position = particle.position
 
-    def set_gbest(self):
+    def setGbest(self):
         for particle in self.particles:
             best_fitness_cadidate = self.fitness(particle)
             if (self.gbest_value > best_fitness_cadidate):
                 self.gbest_value = best_fitness_cadidate
                 self.gbest_position = particle.position
 
-    def move_particles(self):
+    def moveParticles(self):
         for particle in self.particles:
             global W
             new_velocity = (W * particle.velocity) + (c1 * random.random()) * (
-                        particle.pbest_position - particle.position) + \
+                    particle.pbest_position - particle.position) + \
                            (random.random() * c2) * (self.gbest_position - particle.position)
             particle.velocity = new_velocity
             particle.move()
+
 
 search_space = Space(n_particles=praticles_number)
 particles_vector = [Particle() for _ in range(search_space.n_particles)]
@@ -92,15 +95,15 @@ search_space.print_particles()
 #     iteration += 1
 
 for i in range(max_iterations):
-    search_space.set_pbest()
-    search_space.set_gbest()
-    search_space.move_particles()
-
+    search_space.setPbest()
+    search_space.setGbest()
+    search_space.moveParticles()
 
 print("The best solution is: ", search_space.gbest_position)
 
-particle_position_vector = np.array([np.array([(-1) ** (bool(random.getrandbits(1))) * random.random() * 50] * num_variables) for _ in
-                                     range(praticles_number)]) # nie wiem czy tu nie powinien pobierac naszych wylosowanych danych
+particle_position_vector = np.array(
+    [np.array([(-1) ** (bool(random.getrandbits(1))) * random.random() * 50] * num_variables) for _ in
+     range(praticles_number)])  # nie wiem czy tu nie powinien pobierac naszych wylosowanych danych
 
 pbest_position = particle_position_vector
 pbest_fitness_value = np.array([float('inf') for _ in range(praticles_number)])
@@ -124,8 +127,8 @@ for i in range(max_iterations):
 
     for i in range(praticles_number):
         new_velocity = (W * velocity_vector[i]) + (c1 * random.random()) * (
-                    pbest_position[i] - particle_position_vector[i]) + (c2 * random.random()) * (
-                                   gbest_position - particle_position_vector[i])
+                pbest_position[i] - particle_position_vector[i]) + (c2 * random.random()) * (
+                               gbest_position - particle_position_vector[i])
         new_position = new_velocity + particle_position_vector[i]
         particle_position_vector[i] = new_position
 
