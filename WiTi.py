@@ -47,46 +47,38 @@ class Genetic:
         idx2 = max(tmp1, tmp2)
         return r1[:idx1] + r2[idx1:idx2] + r1[idx2:], r2[:idx1] + r1[idx1:idx2] + r2[idx2:]
 
-    def orderedCrossover(self, mum, dad):
-        size = len(mum)
-        alice, bob = [-1] * size, [-1] * size
-        start, end = sorted([random.randrange(size) for _ in range(2)])
+    def orderedCrossover(self, r1, r2):
+        c1, c2 = [-1] * self.n, [-1] * self.n
+        start, end = sorted([random.randrange(self.n) for _ in range(2)])
 
-        alice_inherited = []
-        bob_inherited = []
+        c1_inherited = []
+        c2_inherited = []
         for i in range(start, end + 1):
-            alice[i] = mum[i]
-            bob[i] = dad[i]
-            alice_inherited.append(mum[i])
-            bob_inherited.append(dad[i])
-        current_dad_position, current_mum_position = 0, 0
+            c1[i] = r1[i]
+            c2[i] = r2[i]
+            c1_inherited.append(r1[i])
+            c2_inherited.append(r2[i])
+        current_r2_position, current_r1_position = 0, 0
         fixed_pos = list(range(start, end + 1))
         i = 0
-        while i < size:
+        while i < self.n:
             if i in fixed_pos:
                 i += 1
                 continue
-            test_alice = alice[i]
-            if test_alice == -1:
-                dad_trait = dad[current_dad_position]
-                while dad_trait in alice_inherited:
-                    current_dad_position += 1
-                    dad_trait = dad[current_dad_position]
-                alice[i] = dad_trait
-                alice_inherited.append(dad_trait)
-
-            test_bob = bob[i]
-            if test_bob == -1:
-                mum_trait = mum[current_mum_position]
-                while mum_trait in bob_inherited:
-                    current_mum_position += 1
-                    mum_trait = mum[current_mum_position]
-                bob[i] = mum_trait
-                bob_inherited.append(mum_trait)
-
+            self.test(r2, c1, c1_inherited, current_r2_position, i)
+            self.test(r1, c2, c2_inherited, current_r1_position, i)
             i += 1
+        return c1, c2
 
-        return alice, bob
+    def test(self, r, c, c_inherited, current_r_position, i):
+        test_c = c[i]
+        if test_c == -1:
+            r_trait = r[current_r_position]
+            while r_trait in c_inherited:
+                current_r_position += 1
+                r_trait = r[current_r_position]
+            c[i] = r_trait
+            c_inherited.append(r_trait)
 
     def purposeFunc(self, Pi):
         c = self.cFunc(Pi)
@@ -158,12 +150,12 @@ class Genetic:
             return child[0], child[1], False
 
     def selection(self):
-        Tmp = self.X + self.C
-        Tmp.sort(key=takeSecond)
+        temp = self.X + self.C
+        temp.sort(key=takeSecond)
         self.X.clear()
         self.C.clear()
         self.R.clear()
-        self.X = Tmp[:int(self.n * 0.2)] + random.sample(Tmp[int(self.n * 0.2):], int(self.n * 0.81))
+        self.X = temp[:int(self.n * 0.2)] + random.sample(temp[int(self.n * 0.2):], int(self.n * 0.81))
         shuffle(self.X)
 
     def initialPerm(self, Pi, p):
@@ -193,7 +185,7 @@ class Genetic:
 def calculate(p, Pi, data):
     sol = Genetic(data)
     sol.initialPerm(Pi, p)
-    for i in range(100):
+    for i in range(500):
         sol.pickParents(sol.X)
         sol.makeChildren()
         sol.updateBestForChild()
