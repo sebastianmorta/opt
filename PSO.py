@@ -10,11 +10,10 @@ def rosenbrock(x):
     return sum
 
 #PARAMETRY
-# # c - tempo uczenia, w przedziale 0,1
-# # praticles_number  - liczba czastek
-# # W - kierunek (inertia coefficient),
-# # c1 - przyspieszenie osobiste (cognitive coefficient),
-# # c2 - przyspieszenie globalne (social coefficient)
+# praticles_number  - liczba czastek
+# W - kierunek (inertia coefficient),
+# c1 - przyspieszenie osobiste (cognitive coefficient),
+# c2 - przyspieszenie globalne (social coefficient)
 
 W = 0.5
 c1 = 0.8
