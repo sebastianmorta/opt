@@ -178,6 +178,14 @@ def witi(n, m, seed):
 
 print(witi(10, 5, 123123))
 
+
+def rosen(n, seed):
+    generator = RandomNumberGenerator(seed)
+    x = []
+    for i in range(n):
+        x.append(generator.nextFloat(-100, 100))
+    return x
+
 # ([27, 13, 19, 8, 9], [15, 62, 15, 73, 53], [29, 6, 29, 27, 9])
 
 
