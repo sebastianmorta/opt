@@ -101,7 +101,7 @@ for i in range(max_iterations):
 print("The best solution is: ", search_space.gbest_position)
 
 particle_position_vector = np.array([np.array([(-1) ** (bool(random.getrandbits(1))) * random.random() * 50] * num_variables) for _ in
-                                     range(praticles_number)])
+                                     range(praticles_number)]) # nie wiem czy tu nie powinien pobierac naszych wylosowanych danych
 
 pbest_position = particle_position_vector
 pbest_fitness_value = np.array([float('inf') for _ in range(praticles_number)])
