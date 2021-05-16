@@ -256,10 +256,12 @@ class Genetic():
             a = dict[2]
         elif len(self.weak) > 1:
             a = dict[3]
+        elif len(self.medium)>1:
+            a=dict[2]
         else:
-            return "xd"
+            return 0
         if len(self.best) and len(self.medium) and len(self.weak):
-            b = dict[randint(1, 3)]
+            b = dict[randint(2, 3)]
         elif len(self.best) and len(self.medium):
             b = dict[randint(1, 2)]
         elif len(self.weak) and len(self.best):
@@ -269,7 +271,7 @@ class Genetic():
         elif len(self.weak):
             b = dict[3]
         else:
-            return "xd"
+            return 0
         if a == b:
             if len(a) > 1:
                 t, a, b = self.rmvItem(a, b)
@@ -279,13 +281,17 @@ class Genetic():
         else:
             t, a, b = self.rmvItem(a, b)
             self.R.append(t)
+        return 1
 
     def pickParents(self, perms):
         idx1, idx2 = int(len(perms) / 3), int(len(perms) / 3 * 2)
         perms.sort(key=takeSecond)
         self.best, self.medium, self.weak = perms[:idx1], perms[idx1:idx2], perms[idx2:]
-        while (len(self.best) + len(self.medium) + len(self.weak)) > 1:
-            self.makeParents()
+        a=1
+        for _ in range(self.n):
+            if a!=0:
+                a=self.makeParents()
+
 
     def updateBestForChild(self):
         for c in self.C:
@@ -319,6 +325,7 @@ class Genetic():
         self.C.clear()
         self.R.clear()
         self.X = Tmp[:int(self.n * 0.2)] + random.sample(Tmp[int(self.n * 0.2):], int(self.n * 0.81))
+        shuffle(self.X)
 
     def initialPerm(self, Pi, p):
         old_sequence = list.copy(Pi)
@@ -347,7 +354,9 @@ class Genetic():
 def makeChildren(p, Pi, data):
     sol = Genetic(data)
     sol.initialPerm(Pi, p)
-    for i in range(5):
+    for i in range(500):
+        # print(i)
+        # print(sol.X)
         sol.pickParents(sol.X)
         sol.makeChildren()
         sol.updateBestForChild()
