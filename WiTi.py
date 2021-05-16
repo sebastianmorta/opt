@@ -248,30 +248,49 @@ class Genetic():
 
     def makeParents(self):
         dict = {1: self.best, 2: self.medium, 3: self.weak}
-        if len(self.best) and len(self.medium):
-            a = dict[randint(1, 2)]
-        elif len(self.best) and not len(self.medium):
-            a = dict[1]
-        elif not len(self.best) and len(self.medium):
-            a = dict[2]
-        elif len(self.weak) > 1:
-            a = dict[3]
-        elif len(self.medium)>1:
-            a=dict[2]
-        else:
-            return 0
-        if len(self.best) and len(self.medium) and len(self.weak):
-            b = dict[randint(2, 3)]
-        elif len(self.best) and len(self.medium):
-            b = dict[randint(1, 2)]
-        elif len(self.weak) and len(self.best):
-            b = dict[random.randrange(1, 4, 2)]
-        elif len(self.weak) and len(self.best):
-            b = dict[randint(2, 3)]
-        elif len(self.weak):
-            b = dict[3]
-        else:
-            return 0
+        while True:
+            if (len(self.best) + len(self.medium) + len(self.weak))>1:
+                a = dict[randint(1, 2)]
+                b=dict[randint(1, 3)]
+                if len(a)>0 and len(b)>0:
+                    break
+                else:
+                    a = dict[randint(1, 3)]
+                    b = dict[randint(1, 3)]
+                    if len(a) > 0 and len(b) > 0:
+                        break
+            else:
+                return 0
+        # if len(self.best) and len(self.medium):
+        #     a = dict[randint(1, 2)]
+        # elif len(self.best) and not len(self.medium):
+        #     a = dict[1]
+        # elif not len(self.best) and len(self.medium):
+        #     a = dict[2]
+        # elif len(self.weak) > 1:
+        #     a = dict[3]
+        # elif len(self.medium)>1:
+        #     a=dict[2]
+        # elif len(self.best)>1:
+        #     a=dict[1]
+        # else:
+        #     return 0
+        # if len(self.best) and len(self.medium) and len(self.weak):
+        #     b = dict[randint(2, 3)]
+        # elif len(self.best) and len(self.medium):
+        #     b = dict[randint(1, 2)]
+        # elif len(self.weak) and len(self.best):
+        #     b = dict[random.randrange(1, 4, 2)]
+        # elif len(self.weak) and len(self.best):
+        #     b = dict[randint(2, 3)]
+        # elif len(self.weak):
+        #     b = dict[3]
+        # elif len(self.medium):
+        #     b= dict[2]
+        # elif len(self.best):
+        #     b=dict[1]
+        # else:
+        #     return 0
         if a == b:
             if len(a) > 1:
                 t, a, b = self.rmvItem(a, b)
