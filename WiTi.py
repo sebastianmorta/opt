@@ -16,6 +16,14 @@ class Task:
         self.w = w
 
 
+# class Solution:
+#     def __init__(self, permutation, purpose):
+#         self.perm = permutation
+#         self.purpose = purpose
+#
+#     def __eq__(self, other):
+
+
 def takeSecond(elem):
     return elem[1]
 
@@ -32,30 +40,30 @@ class Genetic:
         self.best = []
         self.medium = []
         self.weak = []
+        self.tm = []
 
     @staticmethod
     def WiTi(C, w, d):
         return max(0, C - d) * w
 
     def cFunc(self, perm):
-        pe = [self.data[perm[i]].p for i in range(self.n)]
-        return [sum(pe[:i]) for i in range(1, self.n + 1)]
+        return [sum(self.pTab(perm)[:i]) for i in range(1, self.n + 1)]
+
+    def pTab(self, perm):
+        return [self.data[perm[i]].p for i in range(self.n)]
 
     def crossingOperator(self, r1, r2):
         tmp1, tmp2 = randint(0, self.n), randint(0, self.n)
-        idx1 = min(tmp1, tmp2)
-        idx2 = max(tmp1, tmp2)
+        idx1, idx2 = min(tmp1, tmp2), max(tmp1, tmp2)
         return r1[:idx1] + r2[idx1:idx2] + r1[idx2:], r2[:idx1] + r1[idx1:idx2] + r2[idx2:]
 
     def orderedCrossover(self, r1, r2):
         c1, c2 = [-1] * self.n, [-1] * self.n
         start, end = sorted([random.randrange(self.n) for _ in range(2)])
 
-        c1_inherited = []
-        c2_inherited = []
+        c1_inherited, c2_inherited = [], []
         for i in range(start, end + 1):
-            c1[i] = r1[i]
-            c2[i] = r2[i]
+            c1[i], c2[i] = r1[i], r2[i]
             c1_inherited.append(r1[i])
             c2_inherited.append(r2[i])
         current_r2_position, current_r1_position = 0, 0
@@ -81,39 +89,38 @@ class Genetic:
             c[i] = r_trait
             c_inherited.append(r_trait)
 
-    def purposeFunc(self, Pi):
-        return sum([self.WiTi(self.cFunc(Pi)[i], self.data[Pi[i]].w, self.data[Pi[i]].d) for i in range(len(Pi))])
+    def purposeFunc(self, perm):
+        return sum(
+            [self.WiTi(self.cFunc(perm)[i], self.data[perm[i]].w, self.data[perm[i]].d) for i in range(len(perm))])
 
-    @staticmethod
-    def rmvItem(list1, list2):
+    def coupleParents(self, list1, list2):
         rm1 = random.choice(list1)
         list1.remove(rm1)
         rm2 = random.choice(list2)
         list2.remove(rm2)
-        return (rm1, rm2), list1, list2
+        self.R.append((rm1, rm2))
+        return list1, list2
 
     def makeParents(self):
-        quality = {1: self.best, 2: self.medium, 3: self.weak}
+        quality_of_perm = {1: self.best, 2: self.medium, 3: self.weak}
         while True:
             if (len(self.best) + len(self.medium) + len(self.weak)) > 1:
-                a = quality[randint(1, 2)]
-                b = quality[randint(1, 3)]
-                if len(a) > 0 and len(b) > 0:
+                r1 = quality_of_perm[randint(1, 2)]
+                r2 = quality_of_perm[randint(1, 3)]
+                if len(r1) and len(r2):
                     break
                 else:
-                    a = quality[randint(1, 3)]
-                    b = quality[randint(1, 3)]
-                    if len(a) > 0 and len(b) > 0:
+                    r1 = quality_of_perm[randint(1, 3)]
+                    r2 = quality_of_perm[randint(1, 3)]
+                    if len(r1) and len(r2):
                         break
             else:
                 return 0
-        if a == b:
-            if len(a) > 1:
-                t, a, b = self.rmvItem(a, b)
-                self.R.append(t)
+        if r1 == r2:
+            if len(r1) > 1:
+                self.coupleParents(r1, r2)
         else:
-            t, a, b = self.rmvItem(a, b)
-            self.R.append(t)
+            self.coupleParents(r1, r2)
         return 1
 
     def pickParents(self, perms):
@@ -130,16 +137,15 @@ class Genetic:
             if c[1] < self.best_value:
                 self.best_value = c[1]
                 self.best_sequence = list.copy(c[0])
-            c_perm, c_val, boo = self.mutating(c)
-            if boo:
+            c_perm, c_val, has_mutated = self.mutating(c)
+            if has_mutated:
                 self.C.append((c_perm, c_val))
                 if c_val < self.best_value:
                     self.best_value = c_val
                     self.best_sequence = list.copy(c_perm)
 
-    @staticmethod
-    def swap(__data__):
-        x1, x2 = randint(0, len(__data__) - 1), randint(0, len(__data__) - 1)
+    def swap(self, __data__):
+        x1, x2 = randint(0, self.n - 1), randint(0, self.n - 1)
         __data__[x1], __data__[x2] = __data__[x2], __data__[x1]
         return __data__
 
@@ -147,20 +153,29 @@ class Genetic:
         if randint(1, 100) < 5:
             c = self.swap(child[0])
             c_val = self.purposeFunc(c)
+            self.tm.append(c_val)
             return c, c_val, True
         else:
             return child[0], child[1], False
 
+    def removeDuplicates(self):
+        new_X = self.X + self.C
+        new_X.sort(key=takeSecond)
+        res = []
+        for i in new_X:
+            if i not in res:
+                res.append(i)
+        return res
+
     def selection(self):
-        temp = self.X + self.C
-        temp.sort(key=takeSecond)
+        temp = self.removeDuplicates()
         self.X.clear()
         self.C.clear()
         self.R.clear()
         self.X = temp[:int(self.n * 0.2)] + random.sample(temp[int(self.n * 0.2):], int(self.n * 0.81))
         shuffle(self.X)
 
-    def initialPerm(self, Pi, p):
+    def initSet(self, Pi, p):
         old_sequence = list.copy(Pi)
         self.best_sequence = list.copy(Pi)
         old_value = self.purposeFunc(old_sequence)
@@ -185,16 +200,18 @@ class Genetic:
 
 
 def calculate(p, Pi, __data__):
-    sol = Genetic(__data__)
-    sol.initialPerm(Pi, p)
-    for i in range(500):
-        sol.pickParents(sol.X)
-        sol.makeChildren()
-        sol.updateBestForChild()
-        sol.selection()
-    print("best is ", sol.best_value, sol.best_sequence)
+    solution = Genetic(__data__)
+    solution.initSet(Pi, p)
+    for i in range(1000):
+        print(i)
+        solution.pickParents(solution.X)
+        solution.makeChildren()
+        solution.updateBestForChild()
+        solution.selection()
+    print("best is ", solution.best_value, solution.best_sequence)
+    print(min(solution.tm))
 
 
 if __name__ == '__main__':
-    n = 10
+    n = 20
     calculate(n, [*range(n)], getData(n))
