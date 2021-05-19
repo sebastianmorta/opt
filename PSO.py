@@ -7,7 +7,7 @@ def rosenbrock(x):
     n = len(x)
     sum = 0
     for i in range(n - 1):
-        sum += 100 * (x[i + 1] - x[i] ** 2) ** 2 + (1 - x[i] ** 2)  # nie wiem czy dobrze
+        sum += 100 * (x[i + 1] - x[i] ** 2) ** 2 + (1 - x[i] ** 2)
     return sum
 
 
@@ -20,8 +20,8 @@ def rosenbrock(x):
 W = 0.5
 c1 = 0.8
 c2 = 0.9
-praticles_number = 30
-max_iterations = 10
+praticles_number = 10
+max_iterations = 1000
 
 num_variables = 5
 seed = 123123
@@ -29,7 +29,7 @@ seed = 123123
 
 class Particle:
     def __init__(self):
-        self.position = np.array(rosen(num_variables, seed))
+        self.position = np.array(rosen(num_variables, random.randint(99999,999999)))
         self.pbest_position = self.position
         self.pbest_value = float('inf')
         self.velocity = np.array([0] * num_variables)
@@ -46,7 +46,7 @@ class Space:
         self.n_particles = n_particles
         self.particles = []
         self.gbest_value = float('inf')
-        self.gbest_position = np.array([random.random() * 50] * num_variables)  # byc moze do poprawy
+        self.gbest_position = np.array([random.random() * 50] * num_variables)
 
     def print_particles(self):
         for particle in self.particles:
@@ -76,8 +76,8 @@ class Space:
         for particle in self.particles:
             global W
             new_velocity = (W * particle.velocity) + (c1 * random.random()) * (
-                    particle.pbest_position - particle.position) + \
-                           (random.random() * c2) * (self.gbest_position - particle.position)
+                    particle.pbest_position - particle.position) + (random.random() * c2) * (
+                                       self.gbest_position - particle.position)
             particle.velocity = new_velocity
             particle.move()
 
@@ -99,37 +99,37 @@ for i in range(max_iterations):
     search_space.setGbest()
     search_space.moveParticles()
 
-print("The best solution is: ", search_space.gbest_position)
+print("The best solution is: ", search_space.gbest_position, search_space.gbest_value)
 
-particle_position_vector = np.array(
-    [np.array([(-1) ** (bool(random.getrandbits(1))) * random.random() * 50] * num_variables) for _ in
-     range(praticles_number)])  # nie wiem czy tu nie powinien pobierac naszych wylosowanych danych
-
-pbest_position = particle_position_vector
-pbest_fitness_value = np.array([float('inf') for _ in range(praticles_number)])
-gbest_fitness_value = float('inf')
-gbest_position = np.array([float('inf')] * num_variables)
-
-velocity_vector = ([np.array([0] * num_variables) for _ in range(praticles_number)])
-
-for i in range(max_iterations):
-    for i in range(praticles_number):
-        fitness_cadidate = rosenbrock(particle_position_vector[i])
-        print(fitness_cadidate, ' ', particle_position_vector[i])
-
-        if (pbest_fitness_value[i] > fitness_cadidate):
-            pbest_fitness_value[i] = fitness_cadidate
-            pbest_position[i] = particle_position_vector[i]
-
-        if (gbest_fitness_value > fitness_cadidate):
-            gbest_fitness_value = fitness_cadidate
-            gbest_position = particle_position_vector[i]
-
-    for i in range(praticles_number):
-        new_velocity = (W * velocity_vector[i]) + (c1 * random.random()) * (
-                pbest_position[i] - particle_position_vector[i]) + (c2 * random.random()) * (
-                               gbest_position - particle_position_vector[i])
-        new_position = new_velocity + particle_position_vector[i]
-        particle_position_vector[i] = new_position
-
-print("Best x:", gbest_position, "| f(x)=", rosenbrock(gbest_position), "| iterations:", max_iterations)
+# particle_position_vector = np.array(
+#     [np.array([(-1) ** (bool(random.getrandbits(1))) * random.random() * 50] * num_variables) for _ in
+#      range(praticles_number)])
+#
+# pbest_position = particle_position_vector
+# pbest_fitness_value = np.array([float('inf') for _ in range(praticles_number)])
+# gbest_fitness_value = float('inf')
+# gbest_position = np.array([float('inf')] * num_variables)
+#
+# velocity_vector = ([np.array([0] * num_variables) for _ in range(praticles_number)])
+#
+# for i in range(max_iterations):
+#     for i in range(praticles_number):
+#         fitness_cadidate = rosenbrock(particle_position_vector[i])
+#         print(fitness_cadidate, ' ', particle_position_vector[i])
+#
+#         if (pbest_fitness_value[i] > fitness_cadidate):
+#             pbest_fitness_value[i] = fitness_cadidate
+#             pbest_position[i] = particle_position_vector[i]
+#
+#         if (gbest_fitness_value > fitness_cadidate):
+#             gbest_fitness_value = fitness_cadidate
+#             gbest_position = particle_position_vector[i]
+#
+#     for i in range(praticles_number):
+#         new_velocity = (W * velocity_vector[i]) + (c1 * random.random()) * (
+#                 pbest_position[i] - particle_position_vector[i]) + (c2 * random.random()) * (
+#                                gbest_position - particle_position_vector[i])
+#         new_position = new_velocity + particle_position_vector[i]
+#         particle_position_vector[i] = new_position
+#
+# print("Best x:", gbest_position, "| f(x)=", rosenbrock(gbest_position), "| iterations:", max_iterations)

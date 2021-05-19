@@ -2,7 +2,7 @@ from randomgen import witi
 
 
 def getData(n):
-    p, d, w = witi(n, 123123)
+    p, d, w = witi(n, 692137)
     __data__ = [Task(p[i], d[i], w[i]) for i in range(n)]
     print(__data__)
     return __data__
@@ -38,8 +38,21 @@ def WiTi(n, data):
 
 
 if __name__ == '__main__':
-    n = 20
+    n = 3
     data = getData(n)
     result = WiTi(n, data)
     print('wynikiWITI: ')
     print(result)
+# class Solution:
+#     def __init__(self, permutation, purpose):
+#         self.perm = permutation
+#         self.purpose = purpose
+#
+#     def __eq__(self, other):
+#         return True if other.perm == self.perm and other.purpose == self.purpose else False
+#
+#
+# a = [Solution([1, 2, 3, 4, 5], 4), Solution([1,2, 3, 4, 5], 4)]
+# x=3
+# t=3
+# print(a[0]==a[1])
