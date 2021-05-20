@@ -5,8 +5,11 @@ from randomgen import witi
 
 def getData(n):
     p, d, w = witi(n, 123123)
-    __data__ = [Task(p[i], d[i], w[i]) for i in range(n)]
-    return __data__
+    return [Task(p[i], d[i], w[i]) for i in range(n)]
+
+
+def takeSecond(elem):
+    return elem.purpose
 
 
 class Task:
@@ -23,10 +26,6 @@ class Solution:
 
     def __eq__(self, other):
         return True if other.perm == self.perm and other.purpose == self.purpose else False
-
-
-def takeSecond(elem):
-    return elem.purpose
 
 
 class Genetic:
@@ -197,9 +196,9 @@ class Genetic:
             self.C.append(Solution(c2, c2_val))
 
 
-def calculate(p, Pi, __data__):
+def calculate(p, init_perm, __data__):
     solution = Genetic(__data__)
-    solution.initSet(Pi, p)
+    solution.initSet(init_perm, p)
     for i in range(1000):
         print(solution.best_value)
         solution.pickParents(solution.X)

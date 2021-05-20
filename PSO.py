@@ -29,7 +29,7 @@ seed = 123123
 
 class Particle:
     def __init__(self):
-        self.position = np.array(rosen(num_variables, random.randint(99999,999999)))
+        self.position = np.array(rosen(num_variables, random.randint(99999, 999999)))
         self.pbest_position = self.position
         self.pbest_value = float('inf')
         self.velocity = np.array([0] * num_variables)
@@ -77,7 +77,7 @@ class Space:
             global W
             new_velocity = (W * particle.velocity) + (c1 * random.random()) * (
                     particle.pbest_position - particle.position) + (random.random() * c2) * (
-                                       self.gbest_position - particle.position)
+                                   self.gbest_position - particle.position)
             particle.velocity = new_velocity
             particle.move()
 
