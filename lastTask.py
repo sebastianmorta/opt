@@ -1,3 +1,5 @@
+from random import shuffle, randint
+
 import numpy
 
 from randomgen import flow2
@@ -10,8 +12,9 @@ class Task:
     def __init__(self, n):
         self.n = n
         self.m = 3
+        self.perm = [*range(n)]
 
-    def Cmax(self, data, n, m=3):
+    def Cmax(self, data, n=5, m=3):
         C = numpy.zeros((int(n + 1), int(m + 1)))
         for j in range(1, n + 1):
             for k in range(1, m + 1):
@@ -29,6 +32,24 @@ class Task:
 
     def maxLateness(self, Cmax_tab, d):
         return max([Cmax_tab[i][3] - d[i] for i in range(self.n)])
+
+    def swapInsert(self, data):
+        x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
+        data.insert(x1, data.pop(x2))
+        return data
+
+    def comparePerms(self, perm1, perm2):
+        c1, c2 = self.Cmax(perm1), self.Cmax(perm2)
+
+
+    def simulatedAnnealing(self, depth):
+        P, i = [], 0
+        x = self.perm
+        shuffle(x)
+        P.append(x)
+
+        for it in range(depth):
+            x2 = self.swapInsert(x)
 
 
 t = Task(n)
