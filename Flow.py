@@ -40,7 +40,7 @@ class FlowShop:
                 best_sequence = temp_sequence
                 best_cmax = temp_cmax
             temp_sequence = best_sequence  # this line if we should reset seq when Cmax is worse
-        print(best_cmax, best_sequence[:, 0])
+        # print(best_cmax, best_sequence[:, 0])
         return best_cmax
 
     def swapPositions(self, data):
@@ -58,9 +58,9 @@ class FlowShop:
         x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
         idx = list(data[:, 0])
         data = self.convertData(data)
-        print("datab",data)
+        # print("datab",data)
         data.insert(x1, data.pop(x2))
-        print("dataa", data)
+        # print("dataa", data)
         idx.insert(x1, idx.pop(x2))
         return self.reconvertData(data, idx)
 
@@ -85,7 +85,7 @@ class FlowShop:
             if best_cmax > old_cmax:
                 best_cmax = old_cmax
                 best_sequence = old_sequence
-        print(best_cmax, best_sequence[:, 0])
+        # print(best_cmax, best_sequence[:, 0])
         return best_cmax
 
     def getProbability(self, delta, t):
@@ -95,10 +95,10 @@ class FlowShop:
         a = [10, 20, 50, 100, 200, 500, 1000]
         iterDepth = T = [val for val in a for _ in range(30)]
         t_sa = np.array([[T[i], self.simulatedAnnealing(T[i], 100, self.swapPositions)] for i in range(len(T))])
-        print('1')
+        # print('1')
         d_sa = np.array(
             [[iterDepth[i], self.simulatedAnnealing(1000, iterDepth[i], self.swapPositions)] for i in range(len(T))])
-        print('2')
+        # print('2')
         d_rs = np.array([[iterDepth[i], self.randomSearch(iterDepth[i], self.swapPositions)] for i in range(len(T))])
         return [t_sa, d_sa, d_rs]
 
@@ -107,7 +107,7 @@ class FlowShop:
         RSinsert, RSneightbour, RSswap = [], [], []
 
         for i in range(150):
-            print(i)
+            # print(i)
             SAinsert.append(self.simulatedAnnealing(100, 100, self.swapInsert))
             SAneightbour.append(self.simulatedAnnealing(100, 100, self.swapNeighbour))
             SAswap.append(self.simulatedAnnealing(100, 100, self.swapPositions))

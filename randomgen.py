@@ -176,6 +176,7 @@ def witi(n, seed):
         d.append(generator.nextInt(1, sum(p)))
     return p, d, w
 
+
 # print(witi(10, 5, 123123))
 
 
@@ -185,6 +186,21 @@ def rosen(n, seed):
     for i in range(n):
         x.append(generator.nextFloat(-100, 100))
     return x
+
+
+def flow2(n, seed):
+    generator = RandomNumberGenerator(seed)
+    p = [[generator.nextInt(1, 99) for _ in range(3)] for i in range(n)]
+    A = sum([sum(i) for i in p])
+    return p, [generator.nextInt(int(A / 6), int(A / 2)) for _ in range(n)]
+# def flow2(n, seed):
+#     generator = RandomNumberGenerator(seed)
+#     p = [[generator.nextInt(1, 99) for _ in range(n)] for i in range(3)]
+#     A = sum([sum(i) for i in p])
+#     return p, [[generator.nextInt(int(A / 6), int(A / 2)) for _ in range(n)] for i in range(3)]
+
+
+# print(flow2(5, 123123))
 
 # ([27, 13, 19, 8, 9], [15, 62, 15, 73, 53], [29, 6, 29, 27, 9])
 
