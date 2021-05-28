@@ -1,3 +1,4 @@
+from itertools import combinations
 from random import shuffle, randint
 
 import numpy
@@ -30,6 +31,7 @@ class LastTask:
         self.perm = [*range(n)]
         self.data = data
         self.P = []
+        self.F = []
         self.benchmark = {
             "totalFlowtime": self.totalFlowtime,
             "maxTardiness": self.maxTardiness,
@@ -70,28 +72,51 @@ class LastTask:
         data.insert(x1, data.pop(x2))
         return data
 
-    def comparePerms(self, perm1, perm2):
+    def comparePerms(self, perm1, perm2, scr):
         c1, c2 = self.Cmax(self.returnP(perm1), True), self.Cmax(self.returnP(perm2), True)
         d1, d2 = self.returnDelay(perm1), self.returnDelay(perm2)
-        c1_score, c2_score = 0, 0
+        c1_score, c2_score = [], []
         for bench_id, bench_name in enumerate(self.benchmark):
             func = self.benchmark[bench_name]
-            if func(c1, d1) < func(c2, d2):
-                c1_score += 1
-            else:
-                c2_score += 1
+            b1, b2 = func(c2, d2), func(c1, d1)
+            c1_score, c2_score = scr(b1, b2, c1_score, c2_score)
+        return [c1_score, c2_score]
 
-        print(c1_score)
-        print(c2_score)
-        if c1_score < c2_score:
-            self.P.append(perm2)
+    def scorer(self, b1, b2, c1_score, c2_score):
+        if b2 < b1:
+            c2_score.append(2)
+            c1_score.append(0)
+        elif b2 > b1:
+            c1_score.append(2)
+            c2_score.append(0)
         else:
-            if randint(1, 100) < 20:
-                self.P.append(perm2)
-        return perm1 if c1_score > c2_score else perm2
+            c1_score.append(1)
+            c2_score.append(1)
+        return c1_score, c2_score
+
+
+    def appendToP(self, perm, c1_score, c2_score):
+        permiss = True
+        for i in range(len(c2_score)):
+            if (c2_score[i] - c1_score[i]) < 0:
+                if randint(1, 100) < 10 * sum(c2_score):
+                    self.P.append(perm)
+                permiss = False
+                break
+        if permiss:
+            self.P.append(perm)
+
+    def removeFromF(self, perm1, perm2, c1_score, c2_score):
+        scr1, scr2 = max(c1_score), max(c2_score)
+        if scr1 == 2 and scr2 == 2:
+            return
+        else:
+            if sum(c1_score) > sum(c2_score):
+                self.F.remove(perm2)
+            else:
+                self.F.remove(perm1)
 
     def simulatedAnnealing(self, depth):
-        i = 0
         old_solution = self.returnPerm(self.data)
         shuffle(old_solution)
         self.P.append(old_solution)
@@ -99,11 +124,15 @@ class LastTask:
             print("----------new----------")
             print("old1", old_solution)
             new_solution = self.swapInsert(list.copy(old_solution))
-            shuffle(new_solution)
             print("new", new_solution)
-            old_solution= list.copy(self.comparePerms(old_solution, new_solution))
-
+            tmp = self.comparePerms(old_solution, new_solution, self.scorer1)
+            self.appendToP(new_solution, tmp[0], tmp[1])
+            old_solution = list.copy(new_solution)
             print("old2", old_solution)
+        print(self.P)
+        self.F = list.copy(self.P)
+        for perm1, perm2 in combinations(self.P, 2):
+            scr = self.comparePerms(perm1, perm2, self.scorer2)
 
 
 n = 5
