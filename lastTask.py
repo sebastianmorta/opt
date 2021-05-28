@@ -32,6 +32,7 @@ class LastTask:
         self.data = data
         self.P = []
         self.F = []
+        self.black_list = []
         self.benchmark = {
             "totalFlowtime": self.totalFlowtime,
             "maxTardiness": self.maxTardiness,
@@ -72,28 +73,30 @@ class LastTask:
         data.insert(x1, data.pop(x2))
         return data
 
-    def comparePerms(self, perm1, perm2, scr):
-        c1, c2 = self.Cmax(self.returnP(perm1), True), self.Cmax(self.returnP(perm2), True)
+    def comparePerms(self, perm1, perm2):
+        c1, c2 = self.Cmax(self.returnP(perm1), True, n=self.n), self.Cmax(self.returnP(perm2), True, n=self.n)
         d1, d2 = self.returnDelay(perm1), self.returnDelay(perm2)
         c1_score, c2_score = [], []
         for bench_id, bench_name in enumerate(self.benchmark):
             func = self.benchmark[bench_name]
             b1, b2 = func(c2, d2), func(c1, d1)
-            c1_score, c2_score = scr(b1, b2, c1_score, c2_score)
+            if b2 < b1:
+                c2_score.append(2)
+                c1_score.append(0)
+            elif b2 > b1:
+                c1_score.append(2)
+                c2_score.append(0)
+            else:
+                c1_score.append(1)
+                c2_score.append(1)
         return [c1_score, c2_score]
 
-    def scorer(self, b1, b2, c1_score, c2_score):
-        if b2 < b1:
-            c2_score.append(2)
-            c1_score.append(0)
-        elif b2 > b1:
-            c1_score.append(2)
-            c2_score.append(0)
-        else:
-            c1_score.append(1)
-            c2_score.append(1)
-        return c1_score, c2_score
-
+    def removeDuplicates(self,rmv):
+        res = []
+        for i in rmv:
+            if i not in res:
+                res.append(i)
+        return res
 
     def appendToP(self, perm, c1_score, c2_score):
         permiss = True
@@ -112,9 +115,9 @@ class LastTask:
             return
         else:
             if sum(c1_score) > sum(c2_score):
-                self.F.remove(perm2)
+                self.black_list.append(perm2)
             else:
-                self.F.remove(perm1)
+                self.black_list.append(perm1)
 
     def simulatedAnnealing(self, depth):
         old_solution = self.returnPerm(self.data)
@@ -124,24 +127,36 @@ class LastTask:
             print("----------new----------")
             print("old1", old_solution)
             new_solution = self.swapInsert(list.copy(old_solution))
+            if new_solution == old_solution:
+                continue
             print("new", new_solution)
-            tmp = self.comparePerms(old_solution, new_solution, self.scorer1)
+            tmp = self.comparePerms(old_solution, new_solution)
             self.appendToP(new_solution, tmp[0], tmp[1])
             old_solution = list.copy(new_solution)
             print("old2", old_solution)
         print(self.P)
+        self.P=self.removeDuplicates(self.P)
         self.F = list.copy(self.P)
         for perm1, perm2 in combinations(self.P, 2):
-            scr = self.comparePerms(perm1, perm2, self.scorer2)
+            scr = self.comparePerms(perm1, perm2)
+            self.removeFromF(perm1, perm2, scr[0], scr[1])
+        print(self.P)
+        print("F ",self.F)
+        print("black",self.black_list)
+        self.black_list=self.removeDuplicates(self.black_list)
+        for rmv in self.black_list:
+            print("afasfasdfasf")
+            self.F.remove(rmv)
+        print(self.F)
 
 
-n = 5
+n = 10
 p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
 print(p)
 a = t.Cmax(p, 5)
 print(a)
-t.simulatedAnnealing(10)
+t.simulatedAnnealing(100)
 # tt = t.totalFlowtime(a)
 # print(tt)
 # ttt = t.maxTardiness(a, d)
