@@ -29,6 +29,7 @@ class LastTask:
         self.m = 3
         self.perm = [*range(n)]
         self.data = data
+        self.P = []
         self.benchmark = {
             "totalFlowtime": self.totalFlowtime,
             "maxTardiness": self.maxTardiness,
@@ -82,20 +83,26 @@ class LastTask:
 
         print(c1_score)
         print(c2_score)
-        return perm1 if c1_score>c2_score else perm2
+        if c1_score < c2_score:
+            self.P.append(perm2)
+        else:
+            if randint(1, 100) < 20:
+                self.P.append(perm2)
+        return perm1 if c1_score > c2_score else perm2
 
     def simulatedAnnealing(self, depth):
-        P, i = [], 0
+        i = 0
         old_solution = self.returnPerm(self.data)
         shuffle(old_solution)
-        P.append(old_solution)
+        self.P.append(old_solution)
         for it in range(depth):
             print("----------new----------")
             print("old1", old_solution)
             new_solution = self.swapInsert(list.copy(old_solution))
             shuffle(new_solution)
             print("new", new_solution)
-            old_solution=self.comparePerms(old_solution, new_solution)
+            old_solution= list.copy(self.comparePerms(old_solution, new_solution))
+
             print("old2", old_solution)
 
 
