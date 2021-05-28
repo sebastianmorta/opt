@@ -42,6 +42,9 @@ class LastTask:
     def returnP(self, perm):
         return [self.data[i].p for i in perm]
 
+    def returnDelay(self, perm):
+        return [self.data[i].d for i in perm]
+
     def Cmax(self, data, return_tab, n=5, m=3):
         C = numpy.zeros((int(n + 1), int(m + 1)))
         for j in range(1, n + 1):
@@ -50,16 +53,16 @@ class LastTask:
         return np.delete(np.delete(C, 0, 0), 0, 1) if return_tab else C[n][m]
 
     def totalFlowtime(self, purpose, d):
-        return sum(purpose[i][3] for i in range(self.n + 1))
+        return sum(purpose[i][2] for i in range(self.n))
 
     def maxTardiness(self, purpose, d):
-        return max([max(0, purpose[i][3] - d[i]) for i in range(self.n)])
+        return max([max(0, purpose[i][2] - d[i]) for i in range(self.n)])
 
     def totalTardiness(self, purpose, d):
-        return sum([max(0, purpose[i][3] - d[i]) for i in range(self.n)])
+        return sum([max(0, purpose[i][2] - d[i]) for i in range(self.n)])
 
     def maxLateness(self, purpose, d):
-        return max([purpose[i][3] - d[i] for i in range(self.n)])
+        return max([purpose[i][2] - d[i] for i in range(self.n)])
 
     def swapInsert(self, data):
         x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)
@@ -68,28 +71,48 @@ class LastTask:
 
     def comparePerms(self, perm1, perm2):
         c1, c2 = self.Cmax(self.returnP(perm1), True), self.Cmax(self.returnP(perm2), True)
-        c1_score, c2_score = 0, 0
+        d1, d2 = self.returnDelay(perm1), self.returnDelay(perm2)
+        c1_score, c2_score = [], []
         for bench_id, bench_name in enumerate(self.benchmark):
             func = self.benchmark[bench_name]
+            # print("ccccccc")
+            # print(c1)
+            # print(c2)
+            #
+            # print("dddddddd")
+            # print(d1)
+            # print(d1)
+            # print("--------------------")
 
+            c1_score.append(func(c1, d1))
+            c2_score.append(func(c2, d2))
+
+        print(c1_score)
+        print(c2_score)
+        print(min(sum(c1_score),sum(c2_score)))
 
     def simulatedAnnealing(self, depth):
         P, i = [], 0
-        old_solution = returnOrder(self.data)
+        old_solution = self.returnPerm(self.data)
         shuffle(old_solution)
         P.append(old_solution)
         for it in range(depth):
-            new_solution = self.swapInsert(old_solution)
+            print("----------new----------")
+            print("old1",old_solution)
+            new_solution = self.swapInsert(list.copy(old_solution))
             shuffle(new_solution)
+            print("new",new_solution)
+            print("old2",old_solution)
             self.comparePerms(old_solution, new_solution)
 
 
 n = 5
 p, delay = flow2(n, 123123)
-t = LastTask(n)
+t = LastTask(n, init(n))
 print(p)
 a = t.Cmax(p, 5)
 print(a)
+t.simulatedAnnealing(10)
 # tt = t.totalFlowtime(a)
 # print(tt)
 # ttt = t.maxTardiness(a, d)
