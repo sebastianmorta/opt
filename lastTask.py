@@ -72,24 +72,17 @@ class LastTask:
     def comparePerms(self, perm1, perm2):
         c1, c2 = self.Cmax(self.returnP(perm1), True), self.Cmax(self.returnP(perm2), True)
         d1, d2 = self.returnDelay(perm1), self.returnDelay(perm2)
-        c1_score, c2_score = [], []
+        c1_score, c2_score = 0, 0
         for bench_id, bench_name in enumerate(self.benchmark):
             func = self.benchmark[bench_name]
-            # print("ccccccc")
-            # print(c1)
-            # print(c2)
-            #
-            # print("dddddddd")
-            # print(d1)
-            # print(d1)
-            # print("--------------------")
-
-            c1_score.append(func(c1, d1))
-            c2_score.append(func(c2, d2))
+            if func(c1, d1) < func(c2, d2):
+                c1_score += 1
+            else:
+                c2_score += 1
 
         print(c1_score)
         print(c2_score)
-        print(min(sum(c1_score),sum(c2_score)))
+        return perm1 if c1_score>c2_score else perm2
 
     def simulatedAnnealing(self, depth):
         P, i = [], 0
@@ -98,12 +91,12 @@ class LastTask:
         P.append(old_solution)
         for it in range(depth):
             print("----------new----------")
-            print("old1",old_solution)
+            print("old1", old_solution)
             new_solution = self.swapInsert(list.copy(old_solution))
             shuffle(new_solution)
-            print("new",new_solution)
-            print("old2",old_solution)
-            self.comparePerms(old_solution, new_solution)
+            print("new", new_solution)
+            old_solution=self.comparePerms(old_solution, new_solution)
+            print("old2", old_solution)
 
 
 n = 5
