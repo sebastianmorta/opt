@@ -91,7 +91,7 @@ class LastTask:
                 c2_score.append(1)
         return [c1_score, c2_score]
 
-    def removeDuplicates(self,rmv):
+    def removeDuplicates(self, rmv):
         res = []
         for i in rmv:
             if i not in res:
@@ -124,38 +124,28 @@ class LastTask:
         shuffle(old_solution)
         self.P.append(old_solution)
         for it in range(depth):
-            print("----------new----------")
-            print("old1", old_solution)
             new_solution = self.swapInsert(list.copy(old_solution))
             if new_solution == old_solution:
                 continue
-            print("new", new_solution)
             tmp = self.comparePerms(old_solution, new_solution)
             self.appendToP(new_solution, tmp[0], tmp[1])
             old_solution = list.copy(new_solution)
-            print("old2", old_solution)
-        print(self.P)
-        self.P=self.removeDuplicates(self.P)
+        self.P = self.removeDuplicates(self.P)
         self.F = list.copy(self.P)
         for perm1, perm2 in combinations(self.P, 2):
             scr = self.comparePerms(perm1, perm2)
             self.removeFromF(perm1, perm2, scr[0], scr[1])
-        print(self.P)
-        print("F ",self.F)
-        print("black",self.black_list)
-        self.black_list=self.removeDuplicates(self.black_list)
+        self.black_list = self.removeDuplicates(self.black_list)
         for rmv in self.black_list:
-            print("afasfasdfasf")
             self.F.remove(rmv)
+        print(self.P)
         print(self.F)
 
 
 n = 10
 p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
-print(p)
-a = t.Cmax(p, 5)
-print(a)
+
 t.simulatedAnnealing(100)
 # tt = t.totalFlowtime(a)
 # print(tt)
