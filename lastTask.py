@@ -213,6 +213,7 @@ kryt2 = sum(b2) / len(b2)
 kryt3 = sum(b3) / len(b3)
 
 
+
 print(kryt1*c1)
 print(kryt2*c2)
 print(kryt3*c3)
