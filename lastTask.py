@@ -6,7 +6,9 @@ import numpy as np
 
 from randomgen import flow2
 
-
+c1 = 0.0481156
+c2 = 0.6681845
+c3 = 0.2836999
 def init(n):
     p, delay = flow2(n, 123123)
     __data__ = [Task(i, p[i], delay[i]) for i in range(n)]
@@ -22,6 +24,10 @@ class Task:
         self.task_number = task_number
         self.p = p
         self.d = delay
+
+
+a1 = []
+a2 = []
 
 
 class LastTask:
@@ -80,6 +86,9 @@ class LastTask:
         for bench_id, bench_name in enumerate(self.benchmark):
             func = self.benchmark[bench_name]
             b1, b2 = func(c2, d2), func(c1, d1)
+
+            a1.append(b1)
+            a2.append(b2)
             if b2 < b1:
                 c2_score.append(2)
                 c1_score.append(0)
@@ -89,6 +98,7 @@ class LastTask:
             else:
                 c1_score.append(1)
                 c2_score.append(1)
+
         return [c1_score, c2_score]
 
     def removeDuplicates(self, rmv):
@@ -140,13 +150,74 @@ class LastTask:
             self.F.remove(rmv)
         print(self.P)
         print(self.F)
+        self.P.clear()
+        self.F.clear()
+        self.black_list.clear()
+
+    def scalar(self, c1, c2, c3, perm):
+        purpose = self.Cmax(self.returnP(perm), True, n=self.n)
+        d = self.returnDelay(perm)
+        return c1 * self.totalFlowtime(purpose, d) + c2 * self.maxTardiness(purpose, d) + c3 * \
+               self.totalTardiness(purpose, d)
+
+    def scalarAlgorithm(self, depth, c1, c2, c3):
+        old_solution = self.returnPerm(self.data)
+
+        # start solution - random
+        shuffle(old_solution)
+
+        # x_best <- scalar(x)
+        old_x = self.scalar(c1, c2, c3, old_solution)
+        # print(new_solution)
+        self.best_x = old_x
+        self.best_solution = list.copy(old_solution)
+
+        for it in range(depth):
+            new_solution = self.swapInsert(list.copy(old_solution))
+            new_x = self.scalar(c1, c2, c3, new_solution)
+            if new_x < old_x:
+                old_solution = list.copy(new_solution)
+                old_x = new_x
+                if new_x < self.best_x:
+                    self.best_solution = list.copy(new_solution)
+                    self.best_x = new_x
+            else:
+                if randint(1, 100) < 0.2:
+                    old_solution = list.copy(new_solution)
+                    old_x = new_x
+                    if new_x < self.best_x:
+                        self.best_solution = list.copy(new_solution)
+                        self.best_x = new_x
+        print(self.best_x, self.best_solution)
 
 
 n = 10
 p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
 
-t.simulatedAnnealing(100)
+t.simulatedAnnealing(1000)
+t.scalarAlgorithm(100, 0.2, 0.5, 0.5)
+
+b1 = a1[0::4] + a2[0::4]
+b2 = a1[1::4] + a2[1::4]
+b3 = a1[2::4] + a2[2::4]
+b4 = a1[3::4] + a2[3::4]
+
+print("kryterium1 średnia", sum(b1) / len(b1))
+print("kryterium2 średnia", sum(b2) / len(b2))
+print("kryterium3 średnia", sum(b3) / len(b3))
+print("kryterium4 średnia", sum(b4) / len(b4))
+
+kryt1 = sum(b1) / len(b1)
+kryt2 = sum(b2) / len(b2)
+kryt3 = sum(b3) / len(b3)
+
+
+print(kryt1*c1)
+print(kryt2*c2)
+print(kryt3*c3)
+
+
 # tt = t.totalFlowtime(a)
 # print(tt)
 # ttt = t.maxTardiness(a, d)
