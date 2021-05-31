@@ -154,27 +154,27 @@ class LastTask:
         self.F.clear()
         self.black_list.clear()
 
-    def scalar(self, c1, c2, c3, perm):
+    def scalar(self, perm):
         purpose = self.Cmax(self.returnP(perm), True, n=self.n)
         d = self.returnDelay(perm)
         return c1 * self.totalFlowtime(purpose, d) + c2 * self.maxTardiness(purpose, d) + c3 * \
                self.totalTardiness(purpose, d)
 
-    def scalarAlgorithm(self, depth, c1, c2, c3):
+    def scalarAlgorithm(self, depth):
         old_solution = self.returnPerm(self.data)
 
         # start solution - random
         shuffle(old_solution)
 
         # x_best <- scalar(x)
-        old_x = self.scalar(c1, c2, c3, old_solution)
+        old_x = self.scalar( old_solution)
         # print(new_solution)
         self.best_x = old_x
         self.best_solution = list.copy(old_solution)
 
         for it in range(depth):
             new_solution = self.swapInsert(list.copy(old_solution))
-            new_x = self.scalar(c1, c2, c3, new_solution)
+            new_x = self.scalar( new_solution)
             if new_x < old_x:
                 old_solution = list.copy(new_solution)
                 old_x = new_x
@@ -196,7 +196,7 @@ p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
 
 t.simulatedAnnealing(1000)
-t.scalarAlgorithm(100, 0.2, 0.5, 0.5)
+t.scalarAlgorithm(100)
 
 b1 = a1[0::4] + a2[0::4]
 b2 = a1[1::4] + a2[1::4]
