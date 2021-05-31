@@ -208,6 +208,7 @@ print("kryterium2 średnia", sum(b2) / len(b2))
 print("kryterium3 średnia", sum(b3) / len(b3))
 print("kryterium4 średnia", sum(b4) / len(b4))
 
+
 kryt1 = sum(b1) / len(b1)
 kryt2 = sum(b2) / len(b2)
 kryt3 = sum(b3) / len(b3)
