@@ -1,6 +1,6 @@
 from itertools import combinations
 from random import shuffle, randint
-
+import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 
@@ -9,6 +9,8 @@ from randomgen import flow2
 c1 = 0.0481156
 c2 = 0.6681845
 c3 = 0.2836999
+
+
 def init(n):
     p, delay = flow2(n, 123123)
     __data__ = [Task(i, p[i], delay[i]) for i in range(n)]
@@ -26,15 +28,31 @@ class Task:
         self.d = delay
 
 
-a1 = []
-a2 = []
+class Draw:
+    def __init__(self, P, F, last_task):
+        self.last_task = last_task
+        self.P = P
+        self.F = F
+        self.X_axis_P, self.Y_axis_P = self.makeChartSpace(P)
+        self.X_axis_F, self.Y_axis_F = self.makeChartSpace(F)
+
+    def makeChartSpace(self, tab):
+        X_axis, Y_axis = [], []
+        for t in tab:
+            X_axis.append(self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(t), True),
+                                                       self.last_task.returnDelay(t)))
+            Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
+                                                      self.last_task.returnDelay(t)))
+
+        return sorted(X_axis), [x for _, x in sorted(zip(X_axis, Y_axis))]
+
+    # def sorter(self, x, y):
 
 
 class LastTask:
     def __init__(self, n, data):
         self.n = n
         self.m = 3
-        self.perm = [*range(n)]
         self.data = data
         self.P = []
         self.F = []
@@ -42,8 +60,8 @@ class LastTask:
         self.benchmark = {
             "totalFlowtime": self.totalFlowtime,
             "maxTardiness": self.maxTardiness,
-            "totalTardiness": self.totalTardiness,
-            "maxLateness": self.maxLateness
+            # "totalTardiness": self.totalTardiness,
+            # "maxLateness": self.maxLateness
         }
 
     def returnPerm(self, perm):
@@ -55,11 +73,11 @@ class LastTask:
     def returnDelay(self, perm):
         return [self.data[i].d for i in perm]
 
-    def Cmax(self, data, return_tab, n=5, m=3):
+    def Cmax(self, p_values, return_tab, n=10, m=3):
         C = numpy.zeros((int(n + 1), int(m + 1)))
         for j in range(1, n + 1):
             for k in range(1, m + 1):
-                C[j][k] = max(C[j - 1][k], C[j][k - 1]) + data[j - 1][k - 1]
+                C[j][k] = max(C[j - 1][k], C[j][k - 1]) + p_values[j - 1][k - 1]
         return np.delete(np.delete(C, 0, 0), 0, 1) if return_tab else C[n][m]
 
     def totalFlowtime(self, purpose, d):
@@ -85,10 +103,8 @@ class LastTask:
         c1_score, c2_score = [], []
         for bench_id, bench_name in enumerate(self.benchmark):
             func = self.benchmark[bench_name]
-            b1, b2 = func(c2, d2), func(c1, d1)
+            b1, b2 = func(c1, d1), func(c2, d2)
 
-            a1.append(b1)
-            a2.append(b2)
             if b2 < b1:
                 c2_score.append(2)
                 c1_score.append(0)
@@ -150,6 +166,9 @@ class LastTask:
             self.F.remove(rmv)
         print(self.P)
         print(self.F)
+        return self.P, self.F
+
+    def cleaner(self):
         self.P.clear()
         self.F.clear()
         self.black_list.clear()
@@ -162,19 +181,14 @@ class LastTask:
 
     def scalarAlgorithm(self, depth):
         old_solution = self.returnPerm(self.data)
-
-        # start solution - random
-        shuffle(old_solution)
-
-        # x_best <- scalar(x)
-        old_x = self.scalar( old_solution)
-        # print(new_solution)
-        self.best_x = old_x
+        shuffle(old_solution)  # start solution - random
+        old_x = self.scalar(old_solution)  # x_best <- scalar(x)
+        self.best_x = old_x  # print(new_solution)
         self.best_solution = list.copy(old_solution)
 
         for it in range(depth):
             new_solution = self.swapInsert(list.copy(old_solution))
-            new_x = self.scalar( new_solution)
+            new_x = self.scalar(new_solution)
             if new_x < old_x:
                 old_solution = list.copy(new_solution)
                 old_x = new_x
@@ -189,38 +203,74 @@ class LastTask:
                         self.best_solution = list.copy(new_solution)
                         self.best_x = new_x
         print(self.best_x, self.best_solution)
+        return self.best_x
+
+
+def drawChart(iter, t):
+    P, F = t.simulatedAnnealing(iter)
+    d = Draw(P, F, t)
+    plt.plot(d.X_axis_P, d.Y_axis_P, 'bo', label='P')
+    plt.plot(d.X_axis_F, d.Y_axis_F, 'ro-', label='F')
+    plt.grid(1, 'major')
+    plt.title("iter=" + str(iter))
+    plt.xlabel("Total Flowtime", size=16)
+    plt.ylabel("Max Tardiness", size=16)
+    plt.legend()
+    plt.savefig("kizdi.png")
+    plt.show()
+    t.cleaner()
 
 
 n = 10
+iter_Tab = [100, 200, 400, 800, 1600]
 p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
+for it in iter_Tab:
+    drawChart(it, t)
+x_ax = []
+y_ax = []
+for it in iter_Tab:
+    x = []
+    y = []
+    for i in range(100):
+        y.append(t.scalarAlgorithm(it))
+        x.append(it)
+    y_ax.append(sum(y) / len(y))
+    x_ax.append(sum(x) / len(x))
 
-t.simulatedAnnealing(1000)
-t.scalarAlgorithm(100)
+plt.plot(x_ax, y_ax, 'go-', label='scalar')
+plt.xlabel("iter")
+plt.ylabel("best s(x)")
+plt.grid(1, 'major')
+plt.legend()
+plt.show()
 
-b1 = a1[0::4] + a2[0::4]
-b2 = a1[1::4] + a2[1::4]
-b3 = a1[2::4] + a2[2::4]
-b4 = a1[3::4] + a2[3::4]
-
-print("kryterium1 średnia", sum(b1) / len(b1))
-print("kryterium2 średnia", sum(b2) / len(b2))
-print("kryterium3 średnia", sum(b3) / len(b3))
-print("kryterium4 średnia", sum(b4) / len(b4))
-
-
-kryt1 = sum(b1) / len(b1)
-kryt2 = sum(b2) / len(b2)
-kryt3 = sum(b3) / len(b3)
+# a=[1,2,3,4,5,6]
+# b=[11,22,33,44]
+#
+# for i, j in zip(a,b):
+#     print(i,j)
 
 
-
-
-print(kryt1*c1)
-print(kryt2*c2)
-
-print(kryt3*c3)
-
+#
+# b1 = a1[0::4] + a2[0::4]
+# b2 = a1[1::4] + a2[1::4]
+# b3 = a1[2::4] + a2[2::4]
+# b4 = a1[3::4] + a2[3::4]
+#
+# print("kryterium1 średnia", sum(b1) / len(b1))
+# print("kryterium2 średnia", sum(b2) / len(b2))
+# print("kryterium3 średnia", sum(b3) / len(b3))
+# print("kryterium4 średnia", sum(b4) / len(b4))
+#
+# kryt1 = sum(b1) / len(b1)
+# kryt2 = sum(b2) / len(b2)
+# kryt3 = sum(b3) / len(b3)
+#
+# print(kryt1 * c1)
+# print(kryt2 * c2)
+#
+# print(kryt3 * c3)
 
 # tt = t.totalFlowtime(a)
 # print(tt)
