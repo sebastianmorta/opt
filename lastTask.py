@@ -202,7 +202,7 @@ class LastTask:
                     if new_x < self.best_x:
                         self.best_solution = list.copy(new_solution)
                         self.best_x = new_x
-        print(self.best_x, self.best_solution)
+        # print(self.best_x, self.best_solution)
         return self.best_x
 
 
@@ -216,7 +216,7 @@ def drawChart(iter, t):
     plt.xlabel("Total Flowtime", size=16)
     plt.ylabel("Max Tardiness", size=16)
     plt.legend()
-    plt.savefig("kizdi.png")
+    plt.savefig(f"kizdi{iter}.png")
     plt.show()
     t.cleaner()
 
