@@ -3,7 +3,7 @@ from random import shuffle, randint
 import matplotlib.pyplot as plt
 import numpy
 import numpy as np
-
+from mpl_toolkits import mplot3d
 from randomgen import flow2
 
 c1 = 0.0481156
@@ -36,6 +36,9 @@ class Draw:
         self.X_axis_P, self.Y_axis_P = self.makeChartSpace(P)
         self.X_axis_F, self.Y_axis_F = self.makeChartSpace(F)
 
+        self.X_axis_P3d, self.Y_axis_P3d, self.Z_axis_P3d = self.makeChartSpace3d(P)
+        self.X_axis_F3d, self.Y_axis_F3d, self.Z_axis_F3d = self.makeChartSpace3d(F)
+
     def makeChartSpace(self, tab):
         X_axis, Y_axis = [], []
         for t in tab:
@@ -45,6 +48,18 @@ class Draw:
                                                       self.last_task.returnDelay(t)))
 
         return sorted(X_axis), [x for _, x in sorted(zip(X_axis, Y_axis))]
+
+    def makeChartSpace3d(self, tab):
+        X_axis, Y_axis, Z_axis = [], [], []
+        for t in tab:
+            X_axis.append(self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(t), True),
+                                                       self.last_task.returnDelay(t)))
+            Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
+                                                      self.last_task.returnDelay(t)))
+            Z_axis.append(self.last_task.totalTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
+                                                        self.last_task.returnDelay(t)))
+
+        return sorted(X_axis), [y for _, y in sorted(zip(X_axis, Y_axis))], [z for _, z in sorted(zip(X_axis, Z_axis))]
 
     # def sorter(self, x, y):
 
@@ -60,7 +75,7 @@ class LastTask:
         self.benchmark = {
             "totalFlowtime": self.totalFlowtime,
             "maxTardiness": self.maxTardiness,
-            # "totalTardiness": self.totalTardiness,
+            "totalTardiness": self.totalTardiness,
             # "maxLateness": self.maxLateness
         }
 
@@ -216,34 +231,47 @@ def drawChart(iter, t):
     plt.xlabel("Total Flowtime", size=16)
     plt.ylabel("Max Tardiness", size=16)
     plt.legend()
-    plt.savefig(f"kizdi{iter}.png")
+    plt.savefig(f"photo{iter}.png")
     plt.show()
     t.cleaner()
+
+
+def drawChart3d(iter, t):
+    P, F = t.simulatedAnnealing(iter)
+    d = Draw(P, F, t)
+    ax = plt.axes(projection='3d')
+    ax.scatter3D(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, c=d.Z_axis_F3d, cmap='Reds')
+    ax.scatter3D(d.X_axis_P3d, d.Y_axis_P3d, d.Z_axis_P3d, c=d.Z_axis_P3d, cmap='Blues')
+    ax.plot3D(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, 'red')
+    plt.show()
 
 
 n = 10
 iter_Tab = [100, 200, 400, 800, 1600]
 p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
-for it in iter_Tab:
-    drawChart(it, t)
-x_ax = []
-y_ax = []
-for it in iter_Tab:
-    x = []
-    y = []
-    for i in range(100):
-        y.append(t.scalarAlgorithm(it))
-        x.append(it)
-    y_ax.append(sum(y) / len(y))
-    x_ax.append(sum(x) / len(x))
+# for it in iter_Tab:
+#     drawChart(it, t)
 
-plt.plot(x_ax, y_ax, 'go-', label='scalar')
-plt.xlabel("iter")
-plt.ylabel("best s(x)")
-plt.grid(1, 'major')
-plt.legend()
-plt.show()
+drawChart3d(2000, t)
+
+# x_ax = []
+# y_ax = []
+# for it in iter_Tab:
+#     x = []
+#     y = []
+#     for i in range(100):
+#         y.append(t.scalarAlgorithm(it))
+#         x.append(it)
+#     y_ax.append(sum(y) / len(y))
+#     x_ax.append(sum(x) / len(x))
+#
+# plt.plot(x_ax, y_ax, 'go-', label='scalar')
+# plt.xlabel("iter")
+# plt.ylabel("best s(x)")
+# plt.grid(1, 'major')
+# plt.legend()
+# plt.show()
 
 # a=[1,2,3,4,5,6]
 # b=[11,22,33,44]
