@@ -3,8 +3,13 @@ from random import shuffle, randint
 import matplotlib.pyplot as plt
 import numpy
 import numpy as np
+from matplotlib.path import Path
 from mpl_toolkits import mplot3d
 from randomgen import flow2
+import plotly
+import plotly.graph_objs as go
+import matplotlib.patches as patches
+import math
 
 c1 = 0.0481156
 c2 = 0.6681845
@@ -39,6 +44,20 @@ class Draw:
         self.X_axis_P3d, self.Y_axis_P3d, self.Z_axis_P3d = self.makeChartSpace3d(P)
         self.X_axis_F3d, self.Y_axis_F3d, self.Z_axis_F3d = self.makeChartSpace3d(F)
 
+    def calculateDistance(self, p1, p2):
+        return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+
+    # def makeChartSpace(self, tab):
+    #     X_axis, Y_axis = [], []
+    #     for t in tab:
+    #         X_axis.append(self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(t), True),
+    #                                                    self.last_task.returnDelay(t)))
+    #         Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
+    #                                                   self.last_task.returnDelay(t)))
+    #
+    #
+    #
+    #     return sorted(X_axis), [x for _, x in sorted(zip(X_axis, Y_axis))]
     def makeChartSpace(self, tab):
         X_axis, Y_axis = [], []
         for t in tab:
@@ -47,7 +66,21 @@ class Draw:
             Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
                                                       self.last_task.returnDelay(t)))
 
-        return sorted(X_axis), [x for _, x in sorted(zip(X_axis, Y_axis))]
+        Y_axis = [x for _, x in sorted(zip(X_axis, Y_axis))]
+        X_axis = sorted(X_axis)
+
+        tmp_x = list.copy(X_axis)
+        tmp_y = list.copy(Y_axis)
+        nearest_list = [(tmp_x.pop(-1), tmp_y.pop(-1))]
+        dist_list = []
+        for x, y in zip(tmp_x, tmp_y):
+            dist_list.append(self.calculateDistance(nearest_list[0]), (x, y))
+        min_value = min(dist_list)
+        min_index = dist_list.index(min_value)
+        nearest_list.append((tmp_x.pop(min_index), tmp_y.pop(min_index)))
+
+        # self.calculateDistanceX_axis(X_axis[-1], Y_axis[-1], )
+        return X_axis, Y_axis
 
     def makeChartSpace3d(self, tab):
         X_axis, Y_axis, Z_axis = [], [], []
@@ -221,7 +254,7 @@ class LastTask:
         return self.best_x
 
 
-def drawChart(iter, t):
+def drawChartPareto(iter, t):
     P, F = t.simulatedAnnealing(iter)
     d = Draw(P, F, t)
     plt.plot(d.X_axis_P, d.Y_axis_P, 'bo', label='P')
@@ -236,9 +269,71 @@ def drawChart(iter, t):
     t.cleaner()
 
 
-def drawChart3d(iter, t):
+def calculateZ():
+    worst_F_X = []
+    worst_F_Y = []
+    fronts_pareto_X = []
+    fronts_pareto_Y = []
+    for iter in iter_Tab:
+        P, F = t.simulatedAnnealing(iter)
+        d = Draw(P, F, t)
+        fronts_pareto_X.append(d.X_axis_F)
+        fronts_pareto_Y.append(d.Y_axis_F)
+        worst_F_X.extend(max(d.X_axis_F))
+        worst_F_Y.extend(max(d.Y_axis_F))
+        t.cleaner()
+
+    Z = [max(worst_F_X), max(worst_F_Y)]
+
+    return Z, fronts_pareto_X, fronts_pareto_Y
+
+
+
+def drawChartHVI(iter, t):
     P, F = t.simulatedAnnealing(iter)
     d = Draw(P, F, t)
+    verts = [(x, y) for x, y in zip(d.X_axis_F, d.Y_axis_F)]
+    codes = [Path.LINETO for _ in range(len(verts) - 1)]
+    verts.append((0., 0.))
+    codes.append(Path.CLOSEPOLY)
+    codes.insert(0, Path.MOVETO)
+
+    path = Path(verts, codes)
+    fig, ax = plt.subplots()
+    patch = patches.PathPatch(path, facecolor='orange', lw=1, alpha=.5)
+    ax.add_patch(patch)
+    ax.set_xlim(min(d.X_axis_F), max(d.X_axis_F))
+    ax.set_ylim(min(d.Y_axis_F), max(d.Y_axis_F))
+    plt.grid(1, 'major')
+    plt.show()
+
+    # plt.plot(d.X_axis_P, d.Y_axis_P, 'bo', label='P')
+    # plt.plot(d.X_axis_F, d.Y_axis_F, 'ro-', label='F')
+    # plt.grid(1, 'major')
+    # plt.title("iter=" + str(iter))
+    # plt.xlabel("Total Flowtime", size=16)
+    # plt.ylabel("Max Tardiness", size=16)
+    # plt.legend()
+    # plt.savefig(f"photo{iter}.png")
+    # plt.show()
+    # t.cleaner()
+
+
+def drawChart3d(iter, t):
+    plotly.offline
+    P, F = t.simulatedAnnealing(iter)
+    d = Draw(P, F, t)
+
+    # trace = go.Scatter3d(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, mode='markers',
+    #                      marker={'size': 10, 'opacity': 0.8, })
+    #
+    # layout = go.Layout(
+    #     margin={'l': 0, 'r': 0, 'b': 0, 't': 0}
+    # )
+    # data = [trace]
+    # plot_figure = go.Figure(data=data, layout=layout)
+    # plotly.offline.iplot(plot_figure)
+
     ax = plt.axes(projection='3d')
     ax.scatter3D(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, c=d.Z_axis_F3d, cmap='Reds')
     ax.scatter3D(d.X_axis_P3d, d.Y_axis_P3d, d.Z_axis_P3d, c=d.Z_axis_P3d, cmap='Blues')
@@ -253,7 +348,9 @@ t = LastTask(n, init(n))
 # for it in iter_Tab:
 #     drawChart(it, t)
 
-drawChart3d(2000, t)
+drawChart3d(5, t)
+
+# drawChartHVI(100, t)
 
 # x_ax = []
 # y_ax = []
