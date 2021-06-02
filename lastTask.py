@@ -22,10 +22,6 @@ def init(n):
     return __data__
 
 
-def returnOrder(data):
-    return data.task_number
-
-
 class Task:
     def __init__(self, task_number, p, delay):
         self.task_number = task_number
@@ -40,7 +36,6 @@ class Draw:
         self.F = F
         self.X_axis_P, self.Y_axis_P = self.makeChartSpace(P)
         self.X_axis_F, self.Y_axis_F = self.makeChartSpace(F)
-
         self.X_axis_P3d, self.Y_axis_P3d, self.Z_axis_P3d = self.makeChartSpace3d(P)
         self.X_axis_F3d, self.Y_axis_F3d, self.Z_axis_F3d = self.makeChartSpace3d(F)
 
@@ -54,51 +49,7 @@ class Draw:
                                                        self.last_task.returnDelay(t)))
             Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
                                                       self.last_task.returnDelay(t)))
-
         return sorted(X_axis), [x for _, x in sorted(zip(X_axis, Y_axis))]
-
-    # def makeChartSpace(self, tab):
-    #     X_axis, Y_axis = [], []
-    #     for t in tab:
-    #         X_axis.append(self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(t), True),
-    #                                                    self.last_task.returnDelay(t)))
-    #         Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
-    #                                                   self.last_task.returnDelay(t)))
-    #
-    #     # Y_axis = [x for _, x in sorted(zip(X_axis, Y_axis))]
-    #     # X_axis = sorted(X_axis)
-    #     #
-    #     # tmp_x = list.copy(X_axis)
-    #     # tmp_y = list.copy(Y_axis)
-    #     # nearest_list = [(tmp_x.pop(-1), tmp_y.pop(-1))]
-    #     # dist_list = []
-    #     # for x, y in zip(tmp_x, tmp_y):
-    #     #     dist_list.append(self.calculateDistance(nearest_list[0]), (x, y))
-    #     # min_value = min(dist_list)
-    #     # min_index = dist_list.index(min_value)
-    #     # nearest_list.append((tmp_x.pop(min_index), tmp_y.pop(min_index)))
-    #     #
-    #     # # self.calculateDistanceX_axis(X_axis[-1], Y_axis[-1], )
-    #
-    #     tmp_x = list.copy(X_axis)
-    #     tmp_y = list.copy(Y_axis)
-    #     nearest_list = [(tmp_x.pop(-1), tmp_y.pop(-1))]
-    #
-    #     while tmp_x:
-    #         dist_list = []
-    #         for x, y in zip(tmp_x, tmp_y):
-    #             dist_list.append(self.calculateDistance(nearest_list[-1], (x, y)))
-    #         min_value = min(dist_list)
-    #         min_index = dist_list.index(min_value)
-    #         nearest_list.append((tmp_x.pop(min_index), tmp_y.pop(min_index)))
-    #
-    #     X_axis = []
-    #     Y_axis = []
-    #
-    #     for p in nearest_list:
-    #         X_axis.append(p[0])
-    #         Y_axis.append(p[1])
-    #     return X_axis, Y_axis
 
     def makeChartSpace3d(self, tab):
         X_axis, Y_axis, Z_axis = [], [], []
@@ -111,8 +62,6 @@ class Draw:
                                                         self.last_task.returnDelay(t)))
 
         return sorted(X_axis), [y for _, y in sorted(zip(X_axis, Y_axis))], [z for _, z in sorted(zip(X_axis, Z_axis))]
-
-    # def sorter(self, x, y):
 
 
 class LastTask:
@@ -170,7 +119,6 @@ class LastTask:
         for bench_id, bench_name in enumerate(self.benchmark):
             func = self.benchmark[bench_name]
             b1, b2 = func(c1, d1), func(c2, d2)
-
             if b2 < b1:
                 c2_score.append(2)
                 c1_score.append(0)
@@ -180,7 +128,6 @@ class LastTask:
             else:
                 c1_score.append(1)
                 c2_score.append(1)
-
         return [c1_score, c2_score]
 
     def removeDuplicates(self, rmv):
@@ -303,8 +250,6 @@ def drawHVI():
 
     Z = [max(worst_F_X), max(worst_F_Y)]
     for x, y in zip(fronts_pareto_X, fronts_pareto_Y):
-        print("before x", x)
-        print("before y", y)
         x.insert(0, Z[0])
         y.insert(0, Z[1])
         if y[1] < Z[1]:
@@ -313,11 +258,6 @@ def drawHVI():
         if x[len(x) - 1] < Z[0]:
             x.insert(len(x), Z[0])
             y.insert(len(y), y[len(y) - 1])
-        # print("after x", x)
-        # print("after y", y)
-
-    # print("fpx", fronts_pareto_X)
-    # print("fpy", fronts_pareto_Y)
     drawChartHVI(fronts_pareto_X, fronts_pareto_Y, Z)
     return Z, fronts_pareto_X, fronts_pareto_Y
 
@@ -347,7 +287,7 @@ def drawChartHVI(front_pareto_X, front_pareto_Y, Z):
     plt.ylabel("Max Tardiness", size=16)
     plt.grid(1, 'major')
     plt.plot(Z[0], Z[1], 'k^')
-    plt.annotate("Z", (Z[0], Z[1]))
+    plt.annotate("Z", (Z[0], Z[1]),size=16)
     plt.show()
 
 
