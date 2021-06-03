@@ -281,7 +281,7 @@ def drawHVI():
             y_shape.insert(len(y_shape), y_shape[len(y_shape) - 1])
     drawChartHVI(fronts_pareto_X_shape, fronts_pareto_Y_shape, fronts_pareto_X, fronts_pareto_Y, Z)
 
-    return Z, fronts_pareto_X, fronts_pareto_Y
+
 
 
 def drawChartHVI(front_pareto_X_shape, front_pareto_Y_shape, fronts_pareto_X, fronts_pareto_Y, Z):
