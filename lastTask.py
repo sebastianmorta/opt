@@ -288,7 +288,6 @@ def drawChartHVI(front_pareto_X_shape, front_pareto_Y_shape, fronts_pareto_X, fr
     colors = ['magenta', 'green', 'blue', 'yellow', 'red']
     markers_shape = ["m-", "g-", 'b-', 'y-', 'r-']
     markers2 = ["m*", "g1", 'bx', 'y^', 'rP']
-
     maxx, maxy, minx, miny = 0, 0, 999999, 9999999
     fig, ax = plt.subplots()
     for fpx, fpy, x, y, color, mark, mark2, iter in zip(front_pareto_X_shape, front_pareto_Y_shape, fronts_pareto_X, fronts_pareto_Y, colors, markers_shape,
