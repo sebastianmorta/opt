@@ -39,9 +39,6 @@ class Draw:
         self.X_axis_P3d, self.Y_axis_P3d, self.Z_axis_P3d = self.makeChartSpace3d(P)
         self.X_axis_F3d, self.Y_axis_F3d, self.Z_axis_F3d = self.makeChartSpace3d(F)
 
-    def calculateDistance(self, p1, p2):
-        return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
-
     def makeChartSpace(self, tab):
         X_axis, Y_axis = [], []
         for t in tab:
@@ -60,7 +57,6 @@ class Draw:
                                                       self.last_task.returnDelay(t)))
             Z_axis.append(self.last_task.totalTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
                                                         self.last_task.returnDelay(t)))
-
         return sorted(X_axis), [y for _, y in sorted(zip(X_axis, Y_axis))], [z for _, z in sorted(zip(X_axis, Z_axis))]
 
 
@@ -99,7 +95,7 @@ class LastTask:
         return sum(purpose[i][2] for i in range(self.n))
 
     def maxTardiness(self, purpose, d):
-        return max([max(0, purpose[i][2] - d[i]) for i in range(self.n)])
+        return int(max([max(0, purpose[i][2] - d[i]) for i in range(self.n)]))
 
     def totalTardiness(self, purpose, d):
         return sum([max(0, purpose[i][2] - d[i]) for i in range(self.n)])
@@ -219,6 +215,13 @@ class LastTask:
         return self.best_x
 
 
+def calcHVI(fpx, fpy, Z, iter):
+    field = (Z[1] - fpy[0]) * (Z[0] - fpx[0])
+    for i in range(len(fpx) - 1):
+        field += (fpy[i] - fpy[i + 1]) * (Z[0] - fpx[i + 1])
+    return print(f"field of HVI for iter={iter}", field)
+
+
 def drawChartPareto(iter, t):
     P, F = t.simulatedAnnealing(iter)
     d = Draw(P, F, t)
@@ -229,16 +232,13 @@ def drawChartPareto(iter, t):
     plt.xlabel("Total Flowtime", size=16)
     plt.ylabel("Max Tardiness", size=16)
     plt.legend()
-    plt.savefig(f"photo{iter}.png")
+    plt.savefig(f"2d_wiz{iter}.png")
     plt.show()
     t.cleaner()
 
 
 def drawHVI():
-    worst_F_X = []
-    worst_F_Y = []
-    fronts_pareto_X = []
-    fronts_pareto_Y = []
+    worst_F_X, worst_F_Y, fronts_pareto_X, fronts_pareto_Y = [], [], [], []
     for iter in iter_Tab:
         P, F = t.simulatedAnnealing(iter)
         d = Draw(P, F, t)
@@ -247,9 +247,10 @@ def drawHVI():
         worst_F_X.append(max(d.X_axis_F))
         worst_F_Y.append(max(d.Y_axis_F))
         t.cleaner()
-
     Z = [max(worst_F_X), max(worst_F_Y)]
-    for x, y in zip(fronts_pareto_X, fronts_pareto_Y):
+
+    for x, y, it in zip(fronts_pareto_X, fronts_pareto_Y, iter_Tab):
+        calcHVI(x, y, Z, it)
         x.insert(0, Z[0])
         y.insert(0, Z[1])
         if y[1] < Z[1]:
@@ -267,7 +268,7 @@ def drawChartHVI(front_pareto_X, front_pareto_Y, Z):
     markers = ["m*-", "g1-", 'bx-', 'y^-', 'rP-']
     maxx, maxy, minx, miny = 0, 0, 999999, 9999999
     fig, ax = plt.subplots()
-    for fpx, fpy, color, mark in zip(front_pareto_X, front_pareto_Y, colors, markers):
+    for fpx, fpy, color, mark, iter in zip(front_pareto_X, front_pareto_Y, colors, markers, iter_Tab):
         verts = [(x, y) for x, y in zip(fpx, fpy)]
         codes = [Path.LINETO for _ in range(len(verts) - 1)]
         verts.append((0., 0.))
@@ -275,19 +276,20 @@ def drawChartHVI(front_pareto_X, front_pareto_Y, Z):
         codes.insert(0, Path.MOVETO)
         path = Path(verts, codes)
         patch = patches.PathPatch(path, facecolor=color, lw=1, alpha=.2)
-        plt.plot(fpx[2:-1], fpy[2:-1], mark, label='P')
+        plt.plot(fpx[2:-1], fpy[2:-1], mark, label=f'F for {iter}')
         ax.add_patch(patch)
-        miny = min(fpy) if min(fpy) < miny else miny
-        minx = min(fpx) if min(fpx) < minx else minx
-        maxy = max(fpy) if max(fpy) > maxy else maxy
-        maxx = max(fpx) if max(fpx) > maxx else maxx
+        miny, minx, maxy, maxx = min(fpy) if min(fpy) < miny else miny, min(fpx) if min(fpx) < minx else minx, max(
+            fpy) if max(fpy) > maxy else maxy, max(fpx) if max(fpx) > maxx else maxx
     ax.set_xlim(minx - 10, maxx + 20)
     ax.set_ylim(miny - 10, maxy + 20)
     plt.xlabel("Total Flowtime", size=16)
     plt.ylabel("Max Tardiness", size=16)
     plt.grid(1, 'major')
     plt.plot(Z[0], Z[1], 'k^')
-    plt.annotate("Z", (Z[0], Z[1]),size=16)
+    plt.annotate("Z", (Z[0], Z[1]), size=16)
+    plt.title("HVI", size=16)
+    plt.legend()
+    plt.savefig(f"HVI.png")
     plt.show()
 
 
@@ -296,8 +298,8 @@ def drawChart3d(iter, t):
     P, F = t.simulatedAnnealing(iter)
     d = Draw(P, F, t)
     ax = plt.axes(projection='3d')
-    ax.scatter3D(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, c=d.Z_axis_F3d, cmap='Reds')
-    ax.scatter3D(d.X_axis_P3d, d.Y_axis_P3d, d.Z_axis_P3d, c=d.Z_axis_P3d, cmap='Blues')
+    ax.scatter3D(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, c=d.Z_axis_F3d, cmap='Reds', label='F')
+    ax.scatter3D(d.X_axis_P3d, d.Y_axis_P3d, d.Z_axis_P3d, c=d.Z_axis_P3d, cmap='Blues', label='P')
     ax.plot3D(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, 'red')
     plt.title("iter=" + str(iter))
     ax.set_xlabel("Total Flowtime", size=16)
@@ -309,17 +311,14 @@ def drawChart3d(iter, t):
 
 
 def drawScalar():
-    x_ax = []
-    y_ax = []
+    x_ax, y_ax = [], []
     for it in iter_Tab:
-        x = []
-        y = []
+        x, y = [], []
         for i in range(100):
             y.append(t.scalarAlgorithm(it))
             x.append(it)
         y_ax.append(sum(y) / len(y))
         x_ax.append(sum(x) / len(x))
-
     plt.plot(x_ax, y_ax, 'go-', label='scalar')
     plt.xlabel("iter")
     plt.ylabel("best s(x)")
