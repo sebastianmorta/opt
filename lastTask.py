@@ -237,6 +237,21 @@ def drawChartPareto(iter, t):
     t.cleaner()
 
 
+def calcShape(fronts_pareto_X, fronts_pareto_Y):
+    tmpx, tmpy = [], []
+    for xxx, yyy in zip(list.copy(fronts_pareto_X), list.copy(fronts_pareto_Y)):
+        tmptmpx, tmptmpy = [xxx[0]], []
+        for i in range(len(xxx) - 1):
+            tmptmpx.append(xxx[i + 1])
+            tmptmpx.append(xxx[i + 1])
+            tmptmpy.append(yyy[i])
+            tmptmpy.append(yyy[i])
+        tmptmpy.append(yyy[len(yyy) - 1])
+        tmpx.append(tmptmpx)
+        tmpy.append(tmptmpy)
+    return tmpx, tmpy
+
+
 def drawHVI():
     worst_F_X, worst_F_Y, fronts_pareto_X, fronts_pareto_Y = [], [], [], []
     for iter in iter_Tab:
@@ -249,26 +264,56 @@ def drawHVI():
         t.cleaner()
     Z = [max(worst_F_X), max(worst_F_Y)]
 
-    for x, y, it in zip(fronts_pareto_X, fronts_pareto_Y, iter_Tab):
-        calcHVI(x, y, Z, it)
-        x.insert(0, Z[0])
-        y.insert(0, Z[1])
-        if y[1] < Z[1]:
-            x.insert(1, x[1])
-            y.insert(1, Z[1])
-        if x[len(x) - 1] < Z[0]:
-            x.insert(len(x), Z[0])
-            y.insert(len(y), y[len(y) - 1])
-    drawChartHVI(fronts_pareto_X, fronts_pareto_Y, Z)
+    # fpx, fpy = list.copy(fronts_pareto_X), list.copy(fronts_pareto_Y)
+    #
+    # tmpx, tmpy = [], []
+    # for xxx, yyy in zip(list.copy(fronts_pareto_X), list.copy(fronts_pareto_Y)):
+    #     tmptmpx, tmptmpy = [xxx[0]], []
+    #     for i in range(len(xxx) - 1):
+    #         tmptmpx.append(xxx[i + 1])
+    #         tmptmpx.append(xxx[i + 1])
+    #         tmptmpy.append(yyy[i])
+    #         tmptmpy.append(yyy[i])
+    #     tmptmpy.append(yyy[len(yyy) - 1])
+    #     tmpx.append(tmptmpx)
+    #     tmpy.append(tmptmpy)
+
+    fronts_pareto_X_shape, fronts_pareto_Y_shape = calcShape(fronts_pareto_X, fronts_pareto_Y)
+
+    # print("tmp")
+    # print("tmpx",tmpx,"tmpy", tmpy)
+    # print("fpx",fpx,  "fpy",fpy)
+    # print(len(tmpx), len(tmpy))
+    # print(len(fpx), len(fpy))
+    # for x, y, it in zip(fronts_pareto_X, fronts_pareto_Y, iter_Tab):
+    # for x, y, xx, yy, it in zip(tmpx, tmpy, fpx, fpy, iter_Tab):
+    for x_shape, y_shape, x_fp, y_fp, it in zip(fronts_pareto_X_shape, fronts_pareto_Y_shape, fronts_pareto_X, fronts_pareto_Y, iter_Tab):
+        # print("0000")
+        # print(x, y)
+        # print(len(x), len(y))
+        calcHVI(x_fp, y_fp, Z, it)
+        x_shape.insert(0, Z[0])
+        y_shape.insert(0, Z[1])
+        if y_shape[1] < Z[1]:
+            x_shape.insert(1, x_shape[1])
+            y_shape.insert(1, Z[1])
+        if x_shape[len(x_shape) - 1] < Z[0]:
+            x_shape.insert(len(x_shape), Z[0])
+            y_shape.insert(len(y_shape), y_shape[len(y_shape) - 1])
+    drawChartHVI(fronts_pareto_X_shape, fronts_pareto_Y_shape, fronts_pareto_X, fronts_pareto_Y, Z)
+    # drawChartHVI(fronts_pareto_X, fronts_pareto_Y, Z)
     return Z, fronts_pareto_X, fronts_pareto_Y
 
 
-def drawChartHVI(front_pareto_X, front_pareto_Y, Z):
+def drawChartHVI(front_pareto_X, front_pareto_Y, fx, fy, Z):
     colors = ['magenta', 'green', 'blue', 'yellow', 'red']
-    markers = ["m*-", "g1-", 'bx-', 'y^-', 'rP-']
+    markers_shape = ["m-", "g-", 'b-', 'y-', 'r-']
+    markers2 = ["m*", "g1", 'bx', 'y^', 'rP']
+
     maxx, maxy, minx, miny = 0, 0, 999999, 9999999
     fig, ax = plt.subplots()
-    for fpx, fpy, color, mark, iter in zip(front_pareto_X, front_pareto_Y, colors, markers, iter_Tab):
+    for fpx, fpy, x, y, color, mark, mark2, iter in zip(front_pareto_X, front_pareto_Y, fx, fy, colors, markers_shape,
+                                                        markers2, iter_Tab):
         verts = [(x, y) for x, y in zip(fpx, fpy)]
         codes = [Path.LINETO for _ in range(len(verts) - 1)]
         verts.append((0., 0.))
@@ -276,12 +321,17 @@ def drawChartHVI(front_pareto_X, front_pareto_Y, Z):
         codes.insert(0, Path.MOVETO)
         path = Path(verts, codes)
         patch = patches.PathPatch(path, facecolor=color, lw=1, alpha=.2)
-        plt.plot(fpx[2:-1], fpy[2:-1], mark, label=f'F for {iter}')
+        # print(fpx, fpy)
+        # print(len(fpx), len(fpy))
+
+        # plt.plot(fpx[2:-1], fpy[2:-1], mark, label=f'F for {iter}')
+        plt.plot(fpx[2:-1], fpy[2:-1], mark)
+        plt.plot(x, y, mark2, label=f'F for {iter}')
         ax.add_patch(patch)
         miny, minx, maxy, maxx = min(fpy) if min(fpy) < miny else miny, min(fpx) if min(fpx) < minx else minx, max(
             fpy) if max(fpy) > maxy else maxy, max(fpx) if max(fpx) > maxx else maxx
     ax.set_xlim(minx - 10, maxx + 20)
-    ax.set_ylim(miny - 10, maxy + 20)
+    ax.set_ylim(miny - 10, maxy + 40)
     plt.xlabel("Total Flowtime", size=16)
     plt.ylabel("Max Tardiness", size=16)
     plt.grid(1, 'major')
@@ -331,16 +381,16 @@ n = 10
 iter_Tab = [100, 200, 400, 800, 1600]
 p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
-for it in iter_Tab:
-    drawChartPareto(it, t)
+# for it in iter_Tab:
+#     drawChartPareto(it, t)
 
 drawHVI()
 
-t.benchmark["totalTardiness"] = t.totalTardiness
-for it in iter_Tab:
-    drawChart3d(it, t)
-
-drawScalar()
+# t.benchmark["totalTardiness"] = t.totalTardiness
+# for it in iter_Tab:
+#     drawChart3d(it, t)
+#
+# drawScalar()
 
 # drawChart3d(5, t)
 
