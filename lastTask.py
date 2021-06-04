@@ -1,15 +1,13 @@
+import random
 from itertools import combinations
 from random import shuffle, randint
+from matplotlib.path import Path
+from randomgen import flow2
 import matplotlib.pyplot as plt
 import numpy
 import numpy as np
-from matplotlib.path import Path
-from mpl_toolkits import mplot3d
-from randomgen import flow2
 import plotly
-import plotly.graph_objs as go
 import matplotlib.patches as patches
-import math
 
 c1 = 0.0481156
 c2 = 0.6681845
@@ -20,6 +18,22 @@ def init(n):
     p, delay = flow2(n, 123123)
     __data__ = [Task(i, p[i], delay[i]) for i in range(n)]
     return __data__
+
+
+class Parameter:
+    def __init__(self, solution, last_task, name):
+        self.name = name
+        self.last_task = last_task
+        self.solution = solution
+        self.benchmark1 = self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
+                                                       self.last_task.returnDelay(self.solution))
+        self.benchmark2 = self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
+                                                      self.last_task.returnDelay(self.solution))
+        self.benchmark3 = self.last_task.totalTardiness(
+            self.last_task.Cmax(self.last_task.returnP(self.solution), True),
+            self.last_task.returnDelay(self.solution))
+        self.benchmark4 = self.last_task.maxLateness(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
+                                                     self.last_task.returnDelay(self.solution))
 
 
 class Task:
@@ -173,8 +187,7 @@ class LastTask:
         self.black_list = self.removeDuplicates(self.black_list)
         for rmv in self.black_list:
             self.F.remove(rmv)
-        # print(self.P)
-        # print(self.F)
+        self.P = [x for x in self.P if x not in self.F]
         return self.P, self.F
 
     def cleaner(self):
@@ -225,8 +238,8 @@ def calcHVI(fpx, fpy, Z, iter):
 def drawChartPareto(iter, t):
     P, F = t.simulatedAnnealing(iter)
     d = Draw(P, F, t)
-    plt.plot(d.X_axis_P, d.Y_axis_P, 'bo', label='P')
     plt.plot(d.X_axis_F, d.Y_axis_F, 'ro-', label='F')
+    plt.plot(d.X_axis_P, d.Y_axis_P, 'bo', label='P')
     plt.grid(1, 'major')
     plt.title("iter=" + str(iter))
     plt.xlabel("Total Flowtime", size=16)
@@ -263,13 +276,10 @@ def drawHVI():
         worst_F_Y.append(max(d.Y_axis_F))
         t.cleaner()
     Z = [max(worst_F_X), max(worst_F_Y)]
-
     fronts_pareto_X_shape, fronts_pareto_Y_shape = calcShape(fronts_pareto_X, fronts_pareto_Y)
 
-
-    for x_shape, y_shape, x_fp, y_fp, it in zip(fronts_pareto_X_shape, fronts_pareto_Y_shape, fronts_pareto_X, fronts_pareto_Y, iter_Tab):
-        print("iterX", it, len(x_fp))
-        print("iterY", it, len(y_fp))
+    for x_shape, y_shape, x_fp, y_fp, it in zip(fronts_pareto_X_shape, fronts_pareto_Y_shape, fronts_pareto_X,
+                                                fronts_pareto_Y, iter_Tab):
         calcHVI(x_fp, y_fp, Z, it)
         x_shape.insert(0, Z[0])
         y_shape.insert(0, Z[1])
@@ -282,15 +292,14 @@ def drawHVI():
     drawChartHVI(fronts_pareto_X_shape, fronts_pareto_Y_shape, fronts_pareto_X, fronts_pareto_Y, Z)
 
 
-
-
 def drawChartHVI(front_pareto_X_shape, front_pareto_Y_shape, fronts_pareto_X, fronts_pareto_Y, Z):
     colors = ['magenta', 'green', 'blue', 'yellow', 'red']
     markers_shape = ["m-", "g-", 'b-', 'y-', 'r-']
     markers2 = ["m*", "g1", 'bx', 'y^', 'rP']
     maxx, maxy, minx, miny = 0, 0, 999999, 9999999
     fig, ax = plt.subplots()
-    for fpx, fpy, x, y, color, mark, mark2, iter in zip(front_pareto_X_shape, front_pareto_Y_shape, fronts_pareto_X, fronts_pareto_Y, colors, markers_shape,
+    for fpx, fpy, x, y, color, mark, mark2, iter in zip(front_pareto_X_shape, front_pareto_Y_shape, fronts_pareto_X,
+                                                        fronts_pareto_Y, colors, markers_shape,
                                                         markers2, iter_Tab):
         verts = [(x, y) for x, y in zip(fpx, fpy)]
         codes = [Path.LINETO for _ in range(len(verts) - 1)]
@@ -351,21 +360,66 @@ def drawScalar():
     plt.show()
 
 
+def wiz2(solutions):
+    BM = ['krit1', 'krit2', 'krit3', 'krit4']
+    norm1, norm2, norm3, norm4 = 0.028849, 0.4, 0.17, 0.4
+    colors = ["m-", "g-", 'b-', 'y-', 'r-']
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for sol, color in zip(solutions, colors):
+        values = [sol.benchmark1 * norm1, sol.benchmark2 * norm2, sol.benchmark3 * norm3, sol.benchmark4 * norm4]
+        ax.plot(BM, values, color, label=sol.name)
+        plt.grid(1, 'major')
+        plt.legend()
+    plt.show()
+
+
+def wiz3(solutions):
+    BM = [['$krit1_1$', '$krit2_1$', '$krit3_1$', '$krit4_1$'], ['$krit1_2$', '$krit2_2$', '$krit3_2$', '$krit4_2$'],
+          ['$krit1_3$', '$krit2_3$', '$krit3_3$', '$krit4_3$'], ['$krit1_w$', '$krit2_w$', '$krit3_w$', '$krit4_w$']]
+    print(BM)
+    norm1, norm2, norm3, norm4 = 0.028849, 0.4, 0.17, 0.4
+    colors = ["m-", "g-", 'b-', 'r-']
+    values = []
+    names = []
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for sol, color in zip(solutions, colors):
+        values.append([sol.benchmark1 * norm1, sol.benchmark2 * norm2, sol.benchmark3 * norm3, sol.benchmark4 * norm4])
+        names.append(sol.name)
+    for v, b, c, n in zip(values, BM, colors, names):
+        ax.scatter(v, b, label=n)
+
+    plt.grid(axis='y', linestyle='--')
+    plt.legend()
+    plt.show()
+
+
 n = 10
-iter_Tab = [100, 200, 400, 800, 1600]
+# iter_Tab = [100, 200, 400, 800, 1600]
+iter_Tab = [100, 200, 400]
 p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
 # for it in iter_Tab:
 #     drawChartPareto(it, t)
-
-drawHVI()
-
+#
+# drawHVI()
+#
 # t.benchmark["totalTardiness"] = t.totalTardiness
 # for it in iter_Tab:
 #     drawChart3d(it, t)
 #
 # drawScalar()
 
+k = LastTask(n, init(n))
+
+k.benchmark["totalTardiness"] = k.totalTardiness
+k.benchmark["maxLateness"] = k.maxLateness
+k.simulatedAnnealing(600)
+
+task3 = random.sample(k.F, 3) + [random.choice(k.P)]
+names = ['FP1', 'FP2', 'FP3', 'weak']
+t3 = [Parameter(sol, k, name) for sol, name in zip(task3, names)]
+wiz2(t3)
+wiz3(t3)
 # drawChart3d(5, t)
 
 # drawChartHVI(100, t)

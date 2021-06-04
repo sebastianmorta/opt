@@ -1,0 +1,201 @@
+Index: lastTask.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from itertools import combinations\r\nfrom random import shuffle, randint\r\nimport matplotlib.pyplot as plt\r\nimport numpy\r\nimport numpy as np\r\nfrom matplotlib.path import Path\r\nfrom mpl_toolkits import mplot3d\r\nfrom randomgen import flow2\r\nimport plotly\r\nimport plotly.graph_objs as go\r\nimport matplotlib.patches as patches\r\nimport math\r\n\r\nc1 = 0.0481156\r\nc2 = 0.6681845\r\nc3 = 0.2836999\r\n\r\n\r\ndef init(n):\r\n    p, delay = flow2(n, 123123)\r\n    __data__ = [Task(i, p[i], delay[i]) for i in range(n)]\r\n    return __data__\r\n\r\n\r\ndef returnOrder(data):\r\n    return data.task_number\r\n\r\n\r\nclass Task:\r\n    def __init__(self, task_number, p, delay):\r\n        self.task_number = task_number\r\n        self.p = p\r\n        self.d = delay\r\n\r\n\r\nclass Draw:\r\n    def __init__(self, P, F, last_task):\r\n        self.last_task = last_task\r\n        self.P = P\r\n        self.F = F\r\n        self.X_axis_P, self.Y_axis_P = self.makeChartSpace(P)\r\n        self.X_axis_F, self.Y_axis_F = self.makeChartSpace(F)\r\n\r\n        self.X_axis_P3d, self.Y_axis_P3d, self.Z_axis_P3d = self.makeChartSpace3d(P)\r\n        self.X_axis_F3d, self.Y_axis_F3d, self.Z_axis_F3d = self.makeChartSpace3d(F)\r\n\r\n    def calculateDistance(self, p1, p2):\r\n        return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)\r\n\r\n    # def makeChartSpace(self, tab):\r\n    #     X_axis, Y_axis = [], []\r\n    #     for t in tab:\r\n    #         X_axis.append(self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(t), True),\r\n    #                                                    self.last_task.returnDelay(t)))\r\n    #         Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),\r\n    #                                                   self.last_task.returnDelay(t)))\r\n    #\r\n    #\r\n    #\r\n    #     return sorted(X_axis), [x for _, x in sorted(zip(X_axis, Y_axis))]\r\n    def makeChartSpace(self, tab):\r\n        X_axis, Y_axis = [], []\r\n        for t in tab:\r\n            X_axis.append(self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(t), True),\r\n                                                       self.last_task.returnDelay(t)))\r\n            Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),\r\n                                                      self.last_task.returnDelay(t)))\r\n\r\n        Y_axis = [x for _, x in sorted(zip(X_axis, Y_axis))]\r\n        X_axis = sorted(X_axis)\r\n\r\n        tmp_x = list.copy(X_axis)\r\n        tmp_y = list.copy(Y_axis)\r\n        nearest_list = [(tmp_x.pop(-1), tmp_y.pop(-1))]\r\n        dist_list = []\r\n        for x, y in zip(tmp_x, tmp_y):\r\n            dist_list.append(self.calculateDistance(nearest_list[0]), (x, y))\r\n        min_value = min(dist_list)\r\n        min_index = dist_list.index(min_value)\r\n        nearest_list.append((tmp_x.pop(min_index), tmp_y.pop(min_index)))\r\n\r\n        # self.calculateDistanceX_axis(X_axis[-1], Y_axis[-1], )\r\n        return X_axis, Y_axis\r\n\r\n    def makeChartSpace3d(self, tab):\r\n        X_axis, Y_axis, Z_axis = [], [], []\r\n        for t in tab:\r\n            X_axis.append(self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(t), True),\r\n                                                       self.last_task.returnDelay(t)))\r\n            Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),\r\n                                                      self.last_task.returnDelay(t)))\r\n            Z_axis.append(self.last_task.totalTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),\r\n                                                        self.last_task.returnDelay(t)))\r\n\r\n        return sorted(X_axis), [y for _, y in sorted(zip(X_axis, Y_axis))], [z for _, z in sorted(zip(X_axis, Z_axis))]\r\n\r\n    # def sorter(self, x, y):\r\n\r\n\r\nclass LastTask:\r\n    def __init__(self, n, data):\r\n        self.n = n\r\n        self.m = 3\r\n        self.data = data\r\n        self.P = []\r\n        self.F = []\r\n        self.black_list = []\r\n        self.benchmark = {\r\n            \"totalFlowtime\": self.totalFlowtime,\r\n            \"maxTardiness\": self.maxTardiness,\r\n            \"totalTardiness\": self.totalTardiness,\r\n            # \"maxLateness\": self.maxLateness\r\n        }\r\n\r\n    def returnPerm(self, perm):\r\n        return [number.task_number for number in perm]\r\n\r\n    def returnP(self, perm):\r\n        return [self.data[i].p for i in perm]\r\n\r\n    def returnDelay(self, perm):\r\n        return [self.data[i].d for i in perm]\r\n\r\n    def Cmax(self, p_values, return_tab, n=10, m=3):\r\n        C = numpy.zeros((int(n + 1), int(m + 1)))\r\n        for j in range(1, n + 1):\r\n            for k in range(1, m + 1):\r\n                C[j][k] = max(C[j - 1][k], C[j][k - 1]) + p_values[j - 1][k - 1]\r\n        return np.delete(np.delete(C, 0, 0), 0, 1) if return_tab else C[n][m]\r\n\r\n    def totalFlowtime(self, purpose, d):\r\n        return sum(purpose[i][2] for i in range(self.n))\r\n\r\n    def maxTardiness(self, purpose, d):\r\n        return max([max(0, purpose[i][2] - d[i]) for i in range(self.n)])\r\n\r\n    def totalTardiness(self, purpose, d):\r\n        return sum([max(0, purpose[i][2] - d[i]) for i in range(self.n)])\r\n\r\n    def maxLateness(self, purpose, d):\r\n        return max([purpose[i][2] - d[i] for i in range(self.n)])\r\n\r\n    def swapInsert(self, data):\r\n        x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)\r\n        data.insert(x1, data.pop(x2))\r\n        return data\r\n\r\n    def comparePerms(self, perm1, perm2):\r\n        c1, c2 = self.Cmax(self.returnP(perm1), True, n=self.n), self.Cmax(self.returnP(perm2), True, n=self.n)\r\n        d1, d2 = self.returnDelay(perm1), self.returnDelay(perm2)\r\n        c1_score, c2_score = [], []\r\n        for bench_id, bench_name in enumerate(self.benchmark):\r\n            func = self.benchmark[bench_name]\r\n            b1, b2 = func(c1, d1), func(c2, d2)\r\n\r\n            if b2 < b1:\r\n                c2_score.append(2)\r\n                c1_score.append(0)\r\n            elif b2 > b1:\r\n                c1_score.append(2)\r\n                c2_score.append(0)\r\n            else:\r\n                c1_score.append(1)\r\n                c2_score.append(1)\r\n\r\n        return [c1_score, c2_score]\r\n\r\n    def removeDuplicates(self, rmv):\r\n        res = []\r\n        for i in rmv:\r\n            if i not in res:\r\n                res.append(i)\r\n        return res\r\n\r\n    def appendToP(self, perm, c1_score, c2_score):\r\n        permiss = True\r\n        for i in range(len(c2_score)):\r\n            if (c2_score[i] - c1_score[i]) < 0:\r\n                if randint(1, 100) < 10 * sum(c2_score):\r\n                    self.P.append(perm)\r\n                permiss = False\r\n                break\r\n        if permiss:\r\n            self.P.append(perm)\r\n\r\n    def removeFromF(self, perm1, perm2, c1_score, c2_score):\r\n        scr1, scr2 = max(c1_score), max(c2_score)\r\n        if scr1 == 2 and scr2 == 2:\r\n            return\r\n        else:\r\n            if sum(c1_score) > sum(c2_score):\r\n                self.black_list.append(perm2)\r\n            else:\r\n                self.black_list.append(perm1)\r\n\r\n    def simulatedAnnealing(self, depth):\r\n        old_solution = self.returnPerm(self.data)\r\n        shuffle(old_solution)\r\n        self.P.append(old_solution)\r\n        for it in range(depth):\r\n            new_solution = self.swapInsert(list.copy(old_solution))\r\n            if new_solution == old_solution:\r\n                continue\r\n            tmp = self.comparePerms(old_solution, new_solution)\r\n            self.appendToP(new_solution, tmp[0], tmp[1])\r\n            old_solution = list.copy(new_solution)\r\n        self.P = self.removeDuplicates(self.P)\r\n        self.F = list.copy(self.P)\r\n        for perm1, perm2 in combinations(self.P, 2):\r\n            scr = self.comparePerms(perm1, perm2)\r\n            self.removeFromF(perm1, perm2, scr[0], scr[1])\r\n        self.black_list = self.removeDuplicates(self.black_list)\r\n        for rmv in self.black_list:\r\n            self.F.remove(rmv)\r\n        print(self.P)\r\n        print(self.F)\r\n        return self.P, self.F\r\n\r\n    def cleaner(self):\r\n        self.P.clear()\r\n        self.F.clear()\r\n        self.black_list.clear()\r\n\r\n    def scalar(self, perm):\r\n        purpose = self.Cmax(self.returnP(perm), True, n=self.n)\r\n        d = self.returnDelay(perm)\r\n        return c1 * self.totalFlowtime(purpose, d) + c2 * self.maxTardiness(purpose, d) + c3 * \\\r\n               self.totalTardiness(purpose, d)\r\n\r\n    def scalarAlgorithm(self, depth):\r\n        old_solution = self.returnPerm(self.data)\r\n        shuffle(old_solution)  # start solution - random\r\n        old_x = self.scalar(old_solution)  # x_best <- scalar(x)\r\n        self.best_x = old_x  # print(new_solution)\r\n        self.best_solution = list.copy(old_solution)\r\n\r\n        for it in range(depth):\r\n            new_solution = self.swapInsert(list.copy(old_solution))\r\n            new_x = self.scalar(new_solution)\r\n            if new_x < old_x:\r\n                old_solution = list.copy(new_solution)\r\n                old_x = new_x\r\n                if new_x < self.best_x:\r\n                    self.best_solution = list.copy(new_solution)\r\n                    self.best_x = new_x\r\n            else:\r\n                if randint(1, 100) < 0.2:\r\n                    old_solution = list.copy(new_solution)\r\n                    old_x = new_x\r\n                    if new_x < self.best_x:\r\n                        self.best_solution = list.copy(new_solution)\r\n                        self.best_x = new_x\r\n        # print(self.best_x, self.best_solution)\r\n        return self.best_x\r\n\r\n\r\ndef drawChartPareto(iter, t):\r\n    P, F = t.simulatedAnnealing(iter)\r\n    d = Draw(P, F, t)\r\n    plt.plot(d.X_axis_P, d.Y_axis_P, 'bo', label='P')\r\n    plt.plot(d.X_axis_F, d.Y_axis_F, 'ro-', label='F')\r\n    plt.grid(1, 'major')\r\n    plt.title(\"iter=\" + str(iter))\r\n    plt.xlabel(\"Total Flowtime\", size=16)\r\n    plt.ylabel(\"Max Tardiness\", size=16)\r\n    plt.legend()\r\n    plt.savefig(f\"photo{iter}.png\")\r\n    plt.show()\r\n    t.cleaner()\r\n\r\n\r\ndef calculateZ():\r\n    worst_F_X = []\r\n    worst_F_Y = []\r\n    fronts_pareto_X = []\r\n    fronts_pareto_Y = []\r\n    for iter in iter_Tab:\r\n        P, F = t.simulatedAnnealing(iter)\r\n        d = Draw(P, F, t)\r\n        fronts_pareto_X.append(d.X_axis_F)\r\n        fronts_pareto_Y.append(d.Y_axis_F)\r\n        worst_F_X.extend(max(d.X_axis_F))\r\n        worst_F_Y.extend(max(d.Y_axis_F))\r\n        t.cleaner()\r\n\r\n    Z = [max(worst_F_X), max(worst_F_Y)]\r\n\r\n    return Z, fronts_pareto_X, fronts_pareto_Y\r\n\r\n\r\n\r\ndef drawChartHVI(iter, t):\r\n    P, F = t.simulatedAnnealing(iter)\r\n    d = Draw(P, F, t)\r\n    verts = [(x, y) for x, y in zip(d.X_axis_F, d.Y_axis_F)]\r\n    codes = [Path.LINETO for _ in range(len(verts) - 1)]\r\n    verts.append((0., 0.))\r\n    codes.append(Path.CLOSEPOLY)\r\n    codes.insert(0, Path.MOVETO)\r\n\r\n    path = Path(verts, codes)\r\n    fig, ax = plt.subplots()\r\n    patch = patches.PathPatch(path, facecolor='orange', lw=1, alpha=.5)\r\n    ax.add_patch(patch)\r\n    ax.set_xlim(min(d.X_axis_F), max(d.X_axis_F))\r\n    ax.set_ylim(min(d.Y_axis_F), max(d.Y_axis_F))\r\n    plt.grid(1, 'major')\r\n    plt.show()\r\n\r\n    # plt.plot(d.X_axis_P, d.Y_axis_P, 'bo', label='P')\r\n    # plt.plot(d.X_axis_F, d.Y_axis_F, 'ro-', label='F')\r\n    # plt.grid(1, 'major')\r\n    # plt.title(\"iter=\" + str(iter))\r\n    # plt.xlabel(\"Total Flowtime\", size=16)\r\n    # plt.ylabel(\"Max Tardiness\", size=16)\r\n    # plt.legend()\r\n    # plt.savefig(f\"photo{iter}.png\")\r\n    # plt.show()\r\n    # t.cleaner()\r\n\r\n\r\ndef drawChart3d(iter, t):\r\n    plotly.offline\r\n    P, F = t.simulatedAnnealing(iter)\r\n    d = Draw(P, F, t)\r\n\r\n    # trace = go.Scatter3d(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, mode='markers',\r\n    #                      marker={'size': 10, 'opacity': 0.8, })\r\n    #\r\n    # layout = go.Layout(\r\n    #     margin={'l': 0, 'r': 0, 'b': 0, 't': 0}\r\n    # )\r\n    # data = [trace]\r\n    # plot_figure = go.Figure(data=data, layout=layout)\r\n    # plotly.offline.iplot(plot_figure)\r\n\r\n    ax = plt.axes(projection='3d')\r\n    ax.scatter3D(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, c=d.Z_axis_F3d, cmap='Reds')\r\n    ax.scatter3D(d.X_axis_P3d, d.Y_axis_P3d, d.Z_axis_P3d, c=d.Z_axis_P3d, cmap='Blues')\r\n    ax.plot3D(d.X_axis_F3d, d.Y_axis_F3d, d.Z_axis_F3d, 'red')\r\n    plt.show()\r\n\r\n\r\nn = 10\r\niter_Tab = [100, 200, 400, 800, 1600]\r\np, delay = flow2(n, 123123)\r\nt = LastTask(n, init(n))\r\n# for it in iter_Tab:\r\n#     drawChart(it, t)\r\n\r\ndrawChart3d(5, t)\r\n\r\n# drawChartHVI(100, t)\r\n\r\n# x_ax = []\r\n# y_ax = []\r\n# for it in iter_Tab:\r\n#     x = []\r\n#     y = []\r\n#     for i in range(100):\r\n#         y.append(t.scalarAlgorithm(it))\r\n#         x.append(it)\r\n#     y_ax.append(sum(y) / len(y))\r\n#     x_ax.append(sum(x) / len(x))\r\n#\r\n# plt.plot(x_ax, y_ax, 'go-', label='scalar')\r\n# plt.xlabel(\"iter\")\r\n# plt.ylabel(\"best s(x)\")\r\n# plt.grid(1, 'major')\r\n# plt.legend()\r\n# plt.show()\r\n\r\n# a=[1,2,3,4,5,6]\r\n# b=[11,22,33,44]\r\n#\r\n# for i, j in zip(a,b):\r\n#     print(i,j)\r\n\r\n\r\n#\r\n# b1 = a1[0::4] + a2[0::4]\r\n# b2 = a1[1::4] + a2[1::4]\r\n# b3 = a1[2::4] + a2[2::4]\r\n# b4 = a1[3::4] + a2[3::4]\r\n#\r\n# print(\"kryterium1 średnia\", sum(b1) / len(b1))\r\n# print(\"kryterium2 średnia\", sum(b2) / len(b2))\r\n# print(\"kryterium3 średnia\", sum(b3) / len(b3))\r\n# print(\"kryterium4 średnia\", sum(b4) / len(b4))\r\n#\r\n# kryt1 = sum(b1) / len(b1)\r\n# kryt2 = sum(b2) / len(b2)\r\n# kryt3 = sum(b3) / len(b3)\r\n#\r\n# print(kryt1 * c1)\r\n# print(kryt2 * c2)\r\n#\r\n# print(kryt3 * c3)\r\n\r\n# tt = t.totalFlowtime(a)\r\n# print(tt)\r\n# ttt = t.maxTardiness(a, d)\r\n# print(ttt)\r\n# tttt = t.totalTardiness(a, d)\r\n# print(tttt)\r\n# ttttt = t.maxLateness(a, d)\r\n# print(ttttt)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lastTask.py b/lastTask.py
+--- a/lastTask.py	
++++ b/lastTask.py	
+@@ -47,17 +47,6 @@
+     def calculateDistance(self, p1, p2):
+         return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+ 
+-    # def makeChartSpace(self, tab):
+-    #     X_axis, Y_axis = [], []
+-    #     for t in tab:
+-    #         X_axis.append(self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(t), True),
+-    #                                                    self.last_task.returnDelay(t)))
+-    #         Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
+-    #                                                   self.last_task.returnDelay(t)))
+-    #
+-    #
+-    #
+-    #     return sorted(X_axis), [x for _, x in sorted(zip(X_axis, Y_axis))]
+     def makeChartSpace(self, tab):
+         X_axis, Y_axis = [], []
+         for t in tab:
+@@ -66,21 +55,50 @@
+             Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
+                                                       self.last_task.returnDelay(t)))
+ 
+-        Y_axis = [x for _, x in sorted(zip(X_axis, Y_axis))]
+-        X_axis = sorted(X_axis)
++        return sorted(X_axis), [x for _, x in sorted(zip(X_axis, Y_axis))]
+ 
+-        tmp_x = list.copy(X_axis)
+-        tmp_y = list.copy(Y_axis)
+-        nearest_list = [(tmp_x.pop(-1), tmp_y.pop(-1))]
+-        dist_list = []
+-        for x, y in zip(tmp_x, tmp_y):
+-            dist_list.append(self.calculateDistance(nearest_list[0]), (x, y))
+-        min_value = min(dist_list)
+-        min_index = dist_list.index(min_value)
+-        nearest_list.append((tmp_x.pop(min_index), tmp_y.pop(min_index)))
+-
+-        # self.calculateDistanceX_axis(X_axis[-1], Y_axis[-1], )
+-        return X_axis, Y_axis
++    # def makeChartSpace(self, tab):
++    #     X_axis, Y_axis = [], []
++    #     for t in tab:
++    #         X_axis.append(self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(t), True),
++    #                                                    self.last_task.returnDelay(t)))
++    #         Y_axis.append(self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(t), True),
++    #                                                   self.last_task.returnDelay(t)))
++    #
++    #     # Y_axis = [x for _, x in sorted(zip(X_axis, Y_axis))]
++    #     # X_axis = sorted(X_axis)
++    #     #
++    #     # tmp_x = list.copy(X_axis)
++    #     # tmp_y = list.copy(Y_axis)
++    #     # nearest_list = [(tmp_x.pop(-1), tmp_y.pop(-1))]
++    #     # dist_list = []
++    #     # for x, y in zip(tmp_x, tmp_y):
++    #     #     dist_list.append(self.calculateDistance(nearest_list[0]), (x, y))
++    #     # min_value = min(dist_list)
++    #     # min_index = dist_list.index(min_value)
++    #     # nearest_list.append((tmp_x.pop(min_index), tmp_y.pop(min_index)))
++    #     #
++    #     # # self.calculateDistanceX_axis(X_axis[-1], Y_axis[-1], )
++    #
++    #     tmp_x = list.copy(X_axis)
++    #     tmp_y = list.copy(Y_axis)
++    #     nearest_list = [(tmp_x.pop(-1), tmp_y.pop(-1))]
++    #
++    #     while tmp_x:
++    #         dist_list = []
++    #         for x, y in zip(tmp_x, tmp_y):
++    #             dist_list.append(self.calculateDistance(nearest_list[-1], (x, y)))
++    #         min_value = min(dist_list)
++    #         min_index = dist_list.index(min_value)
++    #         nearest_list.append((tmp_x.pop(min_index), tmp_y.pop(min_index)))
++    #
++    #     X_axis = []
++    #     Y_axis = []
++    #
++    #     for p in nearest_list:
++    #         X_axis.append(p[0])
++    #         Y_axis.append(p[1])
++    #     return X_axis, Y_axis
+ 
+     def makeChartSpace3d(self, tab):
+         X_axis, Y_axis, Z_axis = [], [], []
+@@ -279,32 +297,60 @@
+         d = Draw(P, F, t)
+         fronts_pareto_X.append(d.X_axis_F)
+         fronts_pareto_Y.append(d.Y_axis_F)
+-        worst_F_X.extend(max(d.X_axis_F))
+-        worst_F_Y.extend(max(d.Y_axis_F))
++        worst_F_X.append(max(d.X_axis_F))
++        worst_F_Y.append(max(d.Y_axis_F))
+         t.cleaner()
+ 
+     Z = [max(worst_F_X), max(worst_F_Y)]
++    for x, y in zip(fronts_pareto_X, fronts_pareto_Y):
++        print("before x", x)
++        print("before y", y)
++        x.insert(0, Z[0])
++        y.insert(0, Z[1])
++        if y[1] < Z[1]:
++            x.insert(1, x[1])
++            y.insert(1, Z[1])
++        if x[len(x) - 1] < Z[0]:
++            x.insert(len(x), Z[0])
++            y.insert(len(y), y[len(y) - 1])
++        print("after x", x)
++        print("after y", y)
+ 
++    print("fpx", fronts_pareto_X)
++    print("fpy", fronts_pareto_Y)
++
++    drawChartHVI(fronts_pareto_X, fronts_pareto_Y, Z)
+     return Z, fronts_pareto_X, fronts_pareto_Y
+ 
+ 
+-
+-def drawChartHVI(iter, t):
+-    P, F = t.simulatedAnnealing(iter)
+-    d = Draw(P, F, t)
+-    verts = [(x, y) for x, y in zip(d.X_axis_F, d.Y_axis_F)]
+-    codes = [Path.LINETO for _ in range(len(verts) - 1)]
+-    verts.append((0., 0.))
+-    codes.append(Path.CLOSEPOLY)
+-    codes.insert(0, Path.MOVETO)
+-
+-    path = Path(verts, codes)
+-    fig, ax = plt.subplots()
+-    patch = patches.PathPatch(path, facecolor='orange', lw=1, alpha=.5)
+-    ax.add_patch(patch)
+-    ax.set_xlim(min(d.X_axis_F), max(d.X_axis_F))
+-    ax.set_ylim(min(d.Y_axis_F), max(d.Y_axis_F))
++def drawChartHVI(front_pareto_X, front_pareto_Y, Z):
++    colors = ['orange', 'green', 'blue', 'yellow', 'red']
++    markers = ["m*-", "g1-", 'bx-', 'y^-', 'rP-']
++    maxx, maxy, minx, miny = 0, 0, 999999, 9999999
++    fig, ax = plt.subplots()
++    for fpx, fpy, color, mark in zip(front_pareto_X, front_pareto_Y, colors, markers):
++        verts = [(x, y) for x, y in zip(fpx, fpy)]
++        codes = [Path.LINETO for _ in range(len(verts) - 1)]
++        verts.append((0., 0.))
++        codes.append(Path.CLOSEPOLY)
++        codes.insert(0, Path.MOVETO)
++        path = Path(verts, codes)
++        patch = patches.PathPatch(path, facecolor=color, lw=1, alpha=.2)
++        plt.plot(fpx[2:-1], fpy[2:-1], mark, label='P')
++        ax.add_patch(patch)
++        miny = min(fpy) if min(fpy) < miny else miny
++        minx = min(fpx) if min(fpx) < minx else minx
++        maxy = max(fpy) if max(fpy) > maxy else maxy
++        maxx = max(fpx) if max(fpx) > maxx else maxx
++    verts.clear()
++    codes.clear()
++    # ax.set_xlim(min(fpx), max(fpy))
++    # ax.set_ylim(min(fpx), max(fpy))
++    ax.set_xlim(minx - 10, maxx + 20)
++    ax.set_ylim(miny - 10, maxy + 20)
+     plt.grid(1, 'major')
++    plt.plot(Z[0], Z[1], 'k^')
++    plt.annotate("Z", (Z[0], Z[1]))
+     plt.show()
+ 
+     # plt.plot(d.X_axis_P, d.Y_axis_P, 'bo', label='P')
+@@ -319,6 +365,8 @@
+     # t.cleaner()
+ 
+ 
++#                         [3973.0, 4202.0, 4217.0, 4519.0, 4522.0]                    [222.0, 185.0, 147.0, 96.0, 59.0]
++# [4621.0, 4621.0, 3973.0, 3973.0, 4202.0, 4217.0, 4519.0, 4522.0][441.0, 59.0, 441.0, 222.0, 185.0, 147.0, 96.0, 59.0]
+ def drawChart3d(iter, t):
+     plotly.offline
+     P, F = t.simulatedAnnealing(iter)
+@@ -343,15 +391,18 @@
+ 
+ n = 10
+ iter_Tab = [100, 200, 400, 800, 1600]
++# iter_Tab = [200, 400]
+ p, delay = flow2(n, 123123)
+ t = LastTask(n, init(n))
+ # for it in iter_Tab:
+ #     drawChart(it, t)
+ 
+-drawChart3d(5, t)
++# drawChart3d(5, t)
+ 
+ # drawChartHVI(100, t)
+ 
++calculateZ()
++
+ # x_ax = []
+ # y_ax = []
+ # for it in iter_Tab:

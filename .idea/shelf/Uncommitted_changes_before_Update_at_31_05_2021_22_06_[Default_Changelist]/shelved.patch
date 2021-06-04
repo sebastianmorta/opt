@@ -1,0 +1,133 @@
+Index: lastTask.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from itertools import combinations\r\nfrom random import shuffle, randint\r\n\r\nimport numpy\r\nimport numpy as np\r\n\r\nfrom randomgen import flow2\r\n\r\n\r\ndef init(n):\r\n    p, delay = flow2(n, 123123)\r\n    __data__ = [Task(i, p[i], delay[i]) for i in range(n)]\r\n    return __data__\r\n\r\n\r\ndef returnOrder(data):\r\n    return data.task_number\r\n\r\n\r\nclass Task:\r\n    def __init__(self, task_number, p, delay):\r\n        self.task_number = task_number\r\n        self.p = p\r\n        self.d = delay\r\n\r\n\r\nclass LastTask:\r\n    def __init__(self, n, data):\r\n        self.n = n\r\n        self.m = 3\r\n        self.perm = [*range(n)]\r\n        self.data = data\r\n        self.P = []\r\n        self.F = []\r\n        self.black_list = []\r\n        self.benchmark = {\r\n            \"totalFlowtime\": self.totalFlowtime,\r\n            \"maxTardiness\": self.maxTardiness,\r\n            \"totalTardiness\": self.totalTardiness,\r\n            \"maxLateness\": self.maxLateness\r\n        }\r\n\r\n    def returnPerm(self, perm):\r\n        return [number.task_number for number in perm]\r\n\r\n    def returnP(self, perm):\r\n        return [self.data[i].p for i in perm]\r\n\r\n    def returnDelay(self, perm):\r\n        return [self.data[i].d for i in perm]\r\n\r\n    def Cmax(self, data, return_tab, n=5, m=3):\r\n        C = numpy.zeros((int(n + 1), int(m + 1)))\r\n        for j in range(1, n + 1):\r\n            for k in range(1, m + 1):\r\n                C[j][k] = max(C[j - 1][k], C[j][k - 1]) + data[j - 1][k - 1]\r\n        return np.delete(np.delete(C, 0, 0), 0, 1) if return_tab else C[n][m]\r\n\r\n    def totalFlowtime(self, purpose, d):\r\n        return sum(purpose[i][2] for i in range(self.n))\r\n\r\n    def maxTardiness(self, purpose, d):\r\n        return max([max(0, purpose[i][2] - d[i]) for i in range(self.n)])\r\n\r\n    def totalTardiness(self, purpose, d):\r\n        return sum([max(0, purpose[i][2] - d[i]) for i in range(self.n)])\r\n\r\n    def maxLateness(self, purpose, d):\r\n        return max([purpose[i][2] - d[i] for i in range(self.n)])\r\n\r\n    def swapInsert(self, data):\r\n        x1, x2 = randint(0, len(data) - 1), randint(0, len(data) - 1)\r\n        data.insert(x1, data.pop(x2))\r\n        return data\r\n\r\n    def comparePerms(self, perm1, perm2):\r\n        c1, c2 = self.Cmax(self.returnP(perm1), True, n=self.n), self.Cmax(self.returnP(perm2), True, n=self.n)\r\n        d1, d2 = self.returnDelay(perm1), self.returnDelay(perm2)\r\n        c1_score, c2_score = [], []\r\n        for bench_id, bench_name in enumerate(self.benchmark):\r\n            func = self.benchmark[bench_name]\r\n            b1, b2 = func(c2, d2), func(c1, d1)\r\n            if b2 < b1:\r\n                c2_score.append(2)\r\n                c1_score.append(0)\r\n            elif b2 > b1:\r\n                c1_score.append(2)\r\n                c2_score.append(0)\r\n            else:\r\n                c1_score.append(1)\r\n                c2_score.append(1)\r\n        return [c1_score, c2_score]\r\n\r\n    def removeDuplicates(self, rmv):\r\n        res = []\r\n        for i in rmv:\r\n            if i not in res:\r\n                res.append(i)\r\n        return res\r\n\r\n    def appendToP(self, perm, c1_score, c2_score):\r\n        permiss = True\r\n        for i in range(len(c2_score)):\r\n            if (c2_score[i] - c1_score[i]) < 0:\r\n                if randint(1, 100) < 10 * sum(c2_score):\r\n                    self.P.append(perm)\r\n                permiss = False\r\n                break\r\n        if permiss:\r\n            self.P.append(perm)\r\n\r\n    def removeFromF(self, perm1, perm2, c1_score, c2_score):\r\n        scr1, scr2 = max(c1_score), max(c2_score)\r\n        if scr1 == 2 and scr2 == 2:\r\n            return\r\n        else:\r\n            if sum(c1_score) > sum(c2_score):\r\n                self.black_list.append(perm2)\r\n            else:\r\n                self.black_list.append(perm1)\r\n\r\n    def simulatedAnnealing(self, depth):\r\n        old_solution = self.returnPerm(self.data)\r\n        shuffle(old_solution)\r\n        self.P.append(old_solution)\r\n        for it in range(depth):\r\n            new_solution = self.swapInsert(list.copy(old_solution))\r\n            if new_solution == old_solution:\r\n                continue\r\n            tmp = self.comparePerms(old_solution, new_solution)\r\n            self.appendToP(new_solution, tmp[0], tmp[1])\r\n            old_solution = list.copy(new_solution)\r\n        self.P = self.removeDuplicates(self.P)\r\n        self.F = list.copy(self.P)\r\n        for perm1, perm2 in combinations(self.P, 2):\r\n            scr = self.comparePerms(perm1, perm2)\r\n            self.removeFromF(perm1, perm2, scr[0], scr[1])\r\n        self.black_list = self.removeDuplicates(self.black_list)\r\n        for rmv in self.black_list:\r\n            self.F.remove(rmv)\r\n        print(self.P)\r\n        print(self.F)\r\n\r\n\r\nn = 10\r\np, delay = flow2(n, 123123)\r\nt = LastTask(n, init(n))\r\n\r\nt.simulatedAnnealing(100)\r\n# tt = t.totalFlowtime(a)\r\n# print(tt)\r\n# ttt = t.maxTardiness(a, d)\r\n# print(ttt)\r\n# tttt = t.totalTardiness(a, d)\r\n# print(tttt)\r\n# ttttt = t.maxLateness(a, d)\r\n# print(ttttt)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lastTask.py b/lastTask.py
+--- a/lastTask.py	
++++ b/lastTask.py	
+@@ -6,7 +6,9 @@
+ 
+ from randomgen import flow2
+ 
+-
++c1 = 0.0481156
++c2 = 0.6681845
++c3 = 0.2836999
+ def init(n):
+     p, delay = flow2(n, 123123)
+     __data__ = [Task(i, p[i], delay[i]) for i in range(n)]
+@@ -24,6 +26,10 @@
+         self.d = delay
+ 
+ 
++a1 = []
++a2 = []
++
++
+ class LastTask:
+     def __init__(self, n, data):
+         self.n = n
+@@ -80,6 +86,9 @@
+         for bench_id, bench_name in enumerate(self.benchmark):
+             func = self.benchmark[bench_name]
+             b1, b2 = func(c2, d2), func(c1, d1)
++
++            a1.append(b1)
++            a2.append(b2)
+             if b2 < b1:
+                 c2_score.append(2)
+                 c1_score.append(0)
+@@ -89,6 +98,7 @@
+             else:
+                 c1_score.append(1)
+                 c2_score.append(1)
++
+         return [c1_score, c2_score]
+ 
+     def removeDuplicates(self, rmv):
+@@ -140,13 +150,74 @@
+             self.F.remove(rmv)
+         print(self.P)
+         print(self.F)
++        self.P.clear()
++        self.F.clear()
++        self.black_list.clear()
++
++    def scalar(self, c1, c2, c3, perm):
++        purpose = self.Cmax(self.returnP(perm), True, n=self.n)
++        d = self.returnDelay(perm)
++        return c1 * self.totalFlowtime(purpose, d) + c2 * self.maxTardiness(purpose, d) + c3 * \
++               self.totalTardiness(purpose, d)
++
++    def scalarAlgorithm(self, depth, c1, c2, c3):
++        old_solution = self.returnPerm(self.data)
++
++        # start solution - random
++        shuffle(old_solution)
++
++        # x_best <- scalar(x)
++        old_x = self.scalar(c1, c2, c3, old_solution)
++        # print(new_solution)
++        self.best_x = old_x
++        self.best_solution = list.copy(old_solution)
++
++        for it in range(depth):
++            new_solution = self.swapInsert(list.copy(old_solution))
++            new_x = self.scalar(c1, c2, c3, new_solution)
++            if new_x < old_x:
++                old_solution = list.copy(new_solution)
++                old_x = new_x
++                if new_x < self.best_x:
++                    self.best_solution = list.copy(new_solution)
++                    self.best_x = new_x
++            else:
++                if randint(1, 100) < 0.2:
++                    old_solution = list.copy(new_solution)
++                    old_x = new_x
++                    if new_x < self.best_x:
++                        self.best_solution = list.copy(new_solution)
++                        self.best_x = new_x
++        print(self.best_x, self.best_solution)
+ 
+ 
+ n = 10
+ p, delay = flow2(n, 123123)
+ t = LastTask(n, init(n))
+ 
+-t.simulatedAnnealing(100)
++t.simulatedAnnealing(1000)
++t.scalarAlgorithm(100, 0.2, 0.5, 0.5)
++
++b1 = a1[0::4] + a2[0::4]
++b2 = a1[1::4] + a2[1::4]
++b3 = a1[2::4] + a2[2::4]
++b4 = a1[3::4] + a2[3::4]
++
++print("kryterium1 średnia", sum(b1) / len(b1))
++print("kryterium2 średnia", sum(b2) / len(b2))
++print("kryterium3 średnia", sum(b3) / len(b3))
++print("kryterium4 średnia", sum(b4) / len(b4))
++
++kryt1 = sum(b1) / len(b1)
++kryt2 = sum(b2) / len(b2)
++kryt3 = sum(b3) / len(b3)
++
++
++print(kryt1*c1)
++print(kryt2*c2)
++print(kryt3*c3)
++
++
+ # tt = t.totalFlowtime(a)
+ # print(tt)
+ # ttt = t.maxTardiness(a, d)
+@@ -154,4 +225,4 @@
+ # tttt = t.totalTardiness(a, d)
+ # print(tttt)
+ # ttttt = t.maxLateness(a, d)
+-# print(ttttt)
++# print(ttttt)
+\ No newline at end of file
