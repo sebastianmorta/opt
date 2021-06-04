@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="1d9c788c-0536-43b1-9a41-50a4f67f5705" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lastTask.py" beforeDir="false" afterPath="$PROJECT_DIR$/lastTask.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -296,7 +295,7 @@
       <workItem from="1622667471636" duration="237000" />
       <workItem from="1622668603408" duration="1147000" />
       <workItem from="1622709612016" duration="14337000" />
-      <workItem from="1622736794457" duration="17713000" />
+      <workItem from="1622736794457" duration="20324000" />
     </task>
     <task id="LOCAL-00001" summary="witi">
       <created>1621019604889</created>
@@ -634,7 +633,14 @@
       <option name="project" value="LOCAL" />
       <updated>1622803905869</updated>
     </task>
-    <option name="localTasksCounter" value="49" />
+    <task id="LOCAL-00049" summary="winz">
+      <created>1622805162040</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1622805162040</updated>
+    </task>
+    <option name="localTasksCounter" value="50" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -728,7 +734,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/lastTask.py</url>
-          <line>46</line>
+          <line>45</line>
           <option name="timeStamp" value="12" />
         </line-breakpoint>
       </breakpoints>

@@ -237,15 +237,15 @@ def calcHVI(fpx, fpy, Z, iter):
 def drawChartPareto(iter, t):
     P, F = t.simulatedAnnealing(iter)
     d = Draw(P, F, t)
-    plt.plot(d.X_axis_F, d.Y_axis_F, 'ro-', label='F')
     plt.plot(d.X_axis_P, d.Y_axis_P, 'bo', label='P')
+    plt.plot(d.X_axis_F, d.Y_axis_F, 'ro-', label='F')
     plt.grid(1, 'major')
     plt.title("iter=" + str(iter))
     plt.xlabel("Total Flowtime", size=16)
     plt.ylabel("Max Tardiness", size=16)
     plt.legend()
-    plt.savefig(f"plots/2d_wiz{iter}.png")
-    # plt.show()
+    plt.savefig(f"plots/1task{iter}.png")
+    plt.show()
     t.cleaner()
 
 
