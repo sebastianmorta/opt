@@ -381,14 +381,13 @@ def wiz3(solutions):
     colors = ["m-", "g-", 'b-', 'r-']
     values = []
     names = []
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 10))
     for sol, color in zip(solutions, colors):
         values.append([sol.benchmark1 * norm1, sol.benchmark2 * norm2, sol.benchmark3 * norm3, sol.benchmark4 * norm4])
         names.append(sol.name)
     for v, b, c, n in zip(values, BM, colors, names):
         ax.scatter(v, b, label=n)
-
-    plt.grid(axis='y', linestyle='--')
+    plt.grid(axis='y', linestyle='dotted')
     plt.legend()
     plt.show()
 
@@ -413,6 +412,7 @@ k = LastTask(n, init(n))
 
 k.benchmark["totalTardiness"] = k.totalTardiness
 k.benchmark["maxLateness"] = k.maxLateness
+print(k.benchmark)
 k.simulatedAnnealing(600)
 
 task3 = random.sample(k.F, 3) + [random.choice(k.P)]
