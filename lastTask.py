@@ -25,14 +25,14 @@ class Parameter:
         self.name = name
         self.last_task = last_task
         self.solution = solution
-        self.benchmark1 = self.last_task.totalFlowtime(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
-                                                       self.last_task.returnDelay(self.solution))
-        self.benchmark2 = self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
-                                                      self.last_task.returnDelay(self.solution))
-        self.benchmark3 = self.last_task.totalTardiness(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
-                                                        self.last_task.returnDelay(self.solution))
-        self.benchmark4 = self.last_task.maxLateness(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
-                                                     self.last_task.returnDelay(self.solution))
+        self.benchmark1 = self.calculateBenchmark(self.last_task.totalFlowtime)
+        self.benchmark2 = self.calculateBenchmark(self.last_task.maxTardiness)
+        self.benchmark3 = self.calculateBenchmark(self.last_task.totalTardiness)
+        self.benchmark4 = self.calculateBenchmark(self.last_task.maxLateness)
+
+    def calculateBenchmark(self, func):
+        return func(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
+                    self.last_task.returnDelay(self.solution))
 
 
 class Task:
@@ -371,7 +371,7 @@ def wiz2(solutions):
         plt.grid(1, 'major')
         plt.legend()
     plt.savefig("plots/wiz2.png")
-    # plt.show()
+    plt.show()
 
 
 def wiz3(solutions):
@@ -391,7 +391,7 @@ def wiz3(solutions):
     plt.grid(axis='y', linestyle='dotted')
     plt.legend()
     plt.savefig("plots/wiz3.png")
-    # plt.show()
+    plt.show()
 
 
 n = 10
