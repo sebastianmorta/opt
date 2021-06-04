@@ -8,6 +8,7 @@ import numpy
 import numpy as np
 import plotly
 import matplotlib.patches as patches
+import csv
 
 c1 = 0.0481156
 c2 = 0.6681845
@@ -394,6 +395,27 @@ def wiz3(solutions):
     plt.show()
 
 
+def wiz4(solutions):
+    values = []
+    names = []
+
+    norm1, norm2, norm3, norm4 = 0.028849, 0.4, 0.17, 0.4
+
+    for sol in solutions:
+        values.append([sol.benchmark1 * norm1, sol.benchmark2 * norm2, sol.benchmark3 * norm3, sol.benchmark4 * norm4])
+        names.append(sol.name)
+
+    normalized_values = []
+    for pareto in values:
+        norm = np.linalg.norm(pareto)
+        normal_array = list(pareto / norm)
+        normalized_values.append(normal_array)
+
+    print(values)
+    print(normalized_values)
+    #print(names)
+
+
 n = 10
 iter_Tab = [100, 200, 400, 800, 1600]
 # iter_Tab = [100, 200, 400]
@@ -422,6 +444,8 @@ names = ['FP1', 'FP2', 'FP3', 'weak']
 t3 = [Parameter(sol, k, name) for sol, name in zip(task3, names)]
 wiz2(t3)
 wiz3(t3)
+wiz4(t3)
+
 # drawChart3d(5, t)
 
 # drawChartHVI(100, t)
