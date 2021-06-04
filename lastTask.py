@@ -29,9 +29,8 @@ class Parameter:
                                                        self.last_task.returnDelay(self.solution))
         self.benchmark2 = self.last_task.maxTardiness(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
                                                       self.last_task.returnDelay(self.solution))
-        self.benchmark3 = self.last_task.totalTardiness(
-            self.last_task.Cmax(self.last_task.returnP(self.solution), True),
-            self.last_task.returnDelay(self.solution))
+        self.benchmark3 = self.last_task.totalTardiness(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
+                                                        self.last_task.returnDelay(self.solution))
         self.benchmark4 = self.last_task.maxLateness(self.last_task.Cmax(self.last_task.returnP(self.solution), True),
                                                      self.last_task.returnDelay(self.solution))
 
@@ -245,8 +244,8 @@ def drawChartPareto(iter, t):
     plt.xlabel("Total Flowtime", size=16)
     plt.ylabel("Max Tardiness", size=16)
     plt.legend()
-    plt.savefig(f"2d_wiz{iter}.png")
-    plt.show()
+    plt.savefig(f"plots/2d_wiz{iter}.png")
+    # plt.show()
     t.cleaner()
 
 
@@ -322,7 +321,7 @@ def drawChartHVI(front_pareto_X_shape, front_pareto_Y_shape, fronts_pareto_X, fr
     plt.annotate("Z", (Z[0], Z[1]), size=16)
     plt.title("HVI", size=16)
     plt.legend()
-    plt.savefig(f"HVI.png")
+    plt.savefig(f"plots/HVI.png")
     plt.show()
 
 
@@ -357,7 +356,8 @@ def drawScalar():
     plt.ylabel("best s(x)")
     plt.grid(1, 'major')
     plt.legend()
-    plt.show()
+    plt.savefig("plots/scalar.png")
+    # plt.show()
 
 
 def wiz2(solutions):
@@ -370,7 +370,8 @@ def wiz2(solutions):
         ax.plot(BM, values, color, label=sol.name)
         plt.grid(1, 'major')
         plt.legend()
-    plt.show()
+    plt.savefig("plots/wiz2.png")
+    # plt.show()
 
 
 def wiz3(solutions):
@@ -389,24 +390,25 @@ def wiz3(solutions):
         ax.scatter(v, b, label=n)
     plt.grid(axis='y', linestyle='dotted')
     plt.legend()
-    plt.show()
+    plt.savefig("plots/wiz3.png")
+    # plt.show()
 
 
 n = 10
-# iter_Tab = [100, 200, 400, 800, 1600]
-iter_Tab = [100, 200, 400]
+iter_Tab = [100, 200, 400, 800, 1600]
+# iter_Tab = [100, 200, 400]
 p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
-# for it in iter_Tab:
-#     drawChartPareto(it, t)
-#
-# drawHVI()
-#
-# t.benchmark["totalTardiness"] = t.totalTardiness
-# for it in iter_Tab:
-#     drawChart3d(it, t)
-#
-# drawScalar()
+for it in iter_Tab:
+    drawChartPareto(it, t)
+
+drawHVI()
+
+t.benchmark["totalTardiness"] = t.totalTardiness
+for it in iter_Tab:
+    drawChart3d(it, t)
+
+drawScalar()
 
 k = LastTask(n, init(n))
 
