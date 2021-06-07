@@ -411,14 +411,59 @@ def wiz4(solutions):
         normal_array = list(pareto / norm)
         normalized_values.append(normal_array)
 
-    print(values)
+    #print(values)
+    print('Star plot values:')
     print(normalized_values)
     #print(names)
+
+def wiz6(solutions, minimums=[3866, 14, 30, 14]):
+    values = []
+    norms = [0.028849, 0.4, 0.17, 0.4]
+    
+    for sol in solutions:
+        values.append([sol.benchmark1 * norms[0], sol.benchmark2 * norms[1], sol.benchmark3 * norms[2], sol.benchmark4 * norms[3]])
+
+    normalized_values = []
+    for pareto in values:
+        mins = minimums.copy()
+        for i in range(len(mins)):
+            mins[i] *= norms[i]
+            pareto.append(mins[i])
+        print(pareto)
+        norm = np.linalg.norm(pareto)
+        normal_array = list(pareto / norm)
+        normalized_values.append(normal_array)
+
+    print('Web plot values:')
+    print(normalized_values)
+
+
+def get_min_values(k, annealing_max_iter=600, iters=5):
+    crit_1, crit_2, crit_3, crit_4 = [], [], [], []
+    for i in range(iters):
+        print(f'iter {i}')
+        k.simulatedAnnealing(annealing_max_iter)
+        solutions = [Parameter(sol, k, '') for sol in k.F + k.P]
+
+        for solution in solutions:
+            crit_1.append(solution.benchmark1)
+            crit_2.append(solution.benchmark2)
+            crit_3.append(solution.benchmark3)
+            crit_4.append(solution.benchmark4)
+
+    print('crit 1 min:')
+    print(min(crit_1))
+    print('crit 2 min:')
+    print(min(crit_2))
+    print('crit 3 min:')
+    print(min(crit_3))
+    print('crit 4 min:')
+    print(min(crit_4))
 
 
 n = 10
 iter_Tab = [100, 200, 400, 800, 1600]
-# iter_Tab = [100, 200, 400]
+
 p, delay = flow2(n, 123123)
 t = LastTask(n, init(n))
 for it in iter_Tab:
@@ -436,15 +481,25 @@ k = LastTask(n, init(n))
 
 k.benchmark["totalTardiness"] = k.totalTardiness
 k.benchmark["maxLateness"] = k.maxLateness
-print(k.benchmark)
+
 k.simulatedAnnealing(600)
+#get_min_values(k, 600, 5)
 
 task3 = random.sample(k.F, 3) + [random.choice(k.P)]
 names = ['FP1', 'FP2', 'FP3', 'weak']
 t3 = [Parameter(sol, k, name) for sol, name in zip(task3, names)]
 wiz2(t3)
 wiz3(t3)
-wiz4(t3)
+
+
+# wiz4 and wiz6 link: https://www.overleaf.com/9263488463tyfvhkkqyrrq
+# star plot values:
+# wiz4(t3)
+
+# web plot values:
+# wiz6(t3)
+
+
 
 # drawChart3d(5, t)
 
